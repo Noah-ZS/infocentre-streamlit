@@ -318,27 +318,8 @@ with right:
     with b2:
 
         if st.button("Réinitialiser"):
-
-            defaults = {
-                "metier": "Tous",
-                "code_coloris": "",
-                "code_matiere": "",
-                "supply": "Tous",
-                "sku": "",
-                "libelle_article": "",
-                "famille": "",
-                "libelle_coloris": "",
-                "statut": "Tous",
-                "podium": False,
-                "nouveaute": False,
-                "produit": "",
-            }
-
-            for key, value in defaults.items():
-                st.session_state[key] = value
-
             st.session_state.filtered_df = st.session_state.df.copy()
-
+            st.session_state.reset_filters = True
             st.rerun()
 
     with b3:
