@@ -268,7 +268,7 @@ with tabs[3]:
 
         if libelle_coloris:
             filtered = filtered[
-                filtered["Libellé Coloris"]
+                filtered["LIBELLE_COLORIS"]
                 .str.contains(libelle_coloris, case=False)
             ]
 
