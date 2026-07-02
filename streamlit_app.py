@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Infocentre")
+st.title("aaaaaaaaaa")
 
 # --------------------------------------------------------
 # COMPACT STYLING FOR FILTER WIDGETS
