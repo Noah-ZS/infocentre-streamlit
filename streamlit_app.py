@@ -113,29 +113,23 @@ df = st.session_state.df
 
 # --------------------------------------------------------
 # WIDGET KEYS FOR THE FILTER FIELDS
-# (needed so we can programmatically reset them)
+# (versioned with a counter so "Réinitialiser" always
+#  produces brand-new widgets with their default values,
+#  regardless of whatever the user typed/selected before)
 # --------------------------------------------------------
 
-FILTER_KEYS = [
-    "f_metier",
-    "f_code_coloris",
-    "f_code_matiere",
-    "f_supply",
-    "f_sku",
-    "f_libelle_article",
-    "f_famille",
-    "f_libelle_coloris",
-    "f_statut",
-    "f_podium",
-    "f_nouveaute",
-    "f_produit",
-]
+if "reset_counter" not in st.session_state:
+    st.session_state.reset_counter = 0
+
+def _k(name):
+    """Build a versioned widget key, e.g. f_metier_0, f_metier_1, ..."""
+    return f"{name}_{st.session_state.reset_counter}"
 
 def reset_filters():
-    """Clear every filter widget back to its default value and reset the table."""
-    for key in FILTER_KEYS:
-        if key in st.session_state:
-            del st.session_state[key]
+    """Force every filter widget to be recreated with its default value
+    (Métier / Supply Chain / Statut -> 'Tous', everything else -> empty/unchecked)
+    and reset the table back to the full dataset."""
+    st.session_state.reset_counter += 1
     st.session_state.filtered_df = df.copy()
 
 # --------------------------------------------------------
@@ -197,23 +191,23 @@ with tabs[3]:
             metier = st.selectbox(
                 "Métier",
                 ["Tous"] + sorted(df["Métier"].unique()),
-                key="f_metier"
+                key=_k("f_metier")
             )
 
             code_coloris = st.text_input(
                 "Code Coloris",
-                key="f_code_coloris"
+                key=_k("f_code_coloris")
             )
 
             code_matiere = st.text_input(
                 "Code Matière",
-                key="f_code_matiere"
+                key=_k("f_code_matiere")
             )
 
             supply = st.selectbox(
                 "Supply Chain",
                 ["Tous"] + sorted(df["Supply Chain"].unique()),
-                key="f_supply"
+                key=_k("f_supply")
             )
 
         # ---------------- MIDDLE ----------------
@@ -222,17 +216,17 @@ with tabs[3]:
 
             sku = st.text_input(
                 "Code SKU",
-                key="f_sku"
+                key=_k("f_sku")
             )
 
             libelle_article = st.text_input(
                 "Libellé Article",
-                key="f_libelle_article"
+                key=_k("f_libelle_article")
             )
 
             famille = st.text_input(
                 "Famille",
-                key="f_famille"
+                key=_k("f_famille")
             )
 
         # ---------------- RIGHT ----------------
@@ -241,7 +235,7 @@ with tabs[3]:
 
             libelle_coloris = st.text_input(
                 "Libellé Coloris",
-                key="f_libelle_coloris"
+                key=_k("f_libelle_coloris")
             )
 
             statut = st.radio(
@@ -251,16 +245,16 @@ with tabs[3]:
                     "Actif",
                     "Inactif"
                 ],
-                key="f_statut"
+                key=_k("f_statut")
             )
 
-            podium = st.checkbox("Pod-New", key="f_podium")
+            podium = st.checkbox("Pod-New", key=_k("f_podium"))
 
-            nouveaute = st.checkbox("Nouveauté SKU", key="f_nouveaute")
+            nouveaute = st.checkbox("Nouveauté SKU", key=_k("f_nouveaute"))
 
             produit = st.text_input(
                 "Produit",
-                key="f_produit"
+                key=_k("f_produit")
             )
 
     with coloris_tab:
