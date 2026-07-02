@@ -52,93 +52,102 @@ st.markdown(
 )
 
 # --------------------------------------------------------
-# SNOWFLAKE CONNECTION
+# SAMPLE DATABASE
 # --------------------------------------------------------
-# Requires a .streamlit/secrets.toml with a [connections.snowflake]
-# section (see the secrets.toml.example file provided alongside
-# this app), e.g.:
-#
-#   [connections.snowflake]
-#   account   = "xxxxxxx-xxxxxxx"
-#   user      = "xxx"
-#   password  = "xxx"          # or private_key_file / authenticator
-#   role      = "xxx"
-#   warehouse = "xxx"
-#   database  = "xxx"
-#   schema    = "xxx"
-#
-# ASSUMPTION: adjust SNOWFLAKE_TABLE below to your fully-qualified
-# table name (DATABASE.SCHEMA.TABLE, or just TABLE if database/schema
-# are already set in secrets.toml).
-
-SNOWFLAKE_TABLE = "INFOCENTRE_DB.PUBLIC.ARTICLES"
-
-# Snowflake returns unquoted column names in UPPERCASE by default.
-# Map those to the French display names used throughout this app.
-# ASSUMPTION: edit the left-hand side to match your real column names
-# (run `DESCRIBE TABLE <SNOWFLAKE_TABLE>` in Snowflake to check them).
-COLUMN_RENAME_MAP = {
-    "METIER": "Métier",
-    "CODE_SKU": "Code SKU",
-    "REF_ARTICLE": "Réf Article",
-    "CODE_COLORIS": "Code Coloris",
-    "LIBELLE_ARTICLE": "Libellé Article",
-    "LIBELLE_COLORIS": "Libellé Coloris",
-    "FAMILLE": "Famille",
-    "SUPPLY_CHAIN": "Supply Chain",
-    "PRODUIT": "Produit",
-    "STATUT": "Statut",
-}
-
-REQUIRED_COLUMNS = [
-    "Métier", "Code SKU", "Réf Article", "Code Coloris",
-    "Libellé Article", "Libellé Coloris", "Famille",
-    "Supply Chain", "Produit", "Statut",
-]
-
-
-@st.cache_data(ttl="10m", show_spinner="Chargement des données Snowflake…")
-def load_articles():
-    conn = st.connection("snowflake")
-    query = f"SELECT * FROM {SNOWFLAKE_TABLE}"
-    data = conn.query(query)
-    data = data.rename(columns=COLUMN_RENAME_MAP)
-    return data
-
 
 if "df" not in st.session_state:
 
-    try:
-        st.session_state.df = load_articles()
-    except Exception as e:
-        st.error(
-            "Impossible de se connecter à Snowflake ou d'exécuter la "
-            "requête. Vérifiez votre fichier .streamlit/secrets.toml "
-            f"et la valeur de SNOWFLAKE_TABLE ('{SNOWFLAKE_TABLE}')."
-        )
-        st.exception(e)
-        st.stop()
+    st.session_state.df = pd.DataFrame({
+        "Métier": [
+            "M","M","M","TEXTILE","TEXTILE","CHAUSSURES"
+        ],
 
-    missing = [c for c in REQUIRED_COLUMNS if c not in st.session_state.df.columns]
-    if missing:
-        st.warning(
-            "Colonnes attendues introuvables après renommage : "
-            f"{missing}. Ajustez COLUMN_RENAME_MAP dans le code pour "
-            "faire correspondre les noms de colonnes réels de votre "
-            "table Snowflake."
-        )
+        "Code SKU": [
+            "000091MR00",
+            "000099MR00",
+            "000109MR00",
+            "TX0001",
+            "TX0002",
+            "SH0001"
+        ],
+
+        "Réf Article":[
+            "000091MR",
+            "000099MR",
+            "000109MR",
+            "TX0001",
+            "TX0002",
+            "SH0001"
+        ],
+
+        "Code Coloris":[
+            "00",
+            "01",
+            "02",
+            "BL",
+            "BK",
+            "WH"
+        ],
+
+        "Libellé Article":[
+            "Réparation non référencée",
+            "Réparation Art de vivre",
+            "Remplacement Baleine",
+            "Chemise Oxford",
+            "Pantalon Chino",
+            "Sneakers"
+        ],
+
+        "Libellé Coloris":[
+            "Noir",
+            "Rouge",
+            "Bleu",
+            "Blanc",
+            "Noir",
+            "Blanc"
+        ],
+
+        "Famille":[
+            "SAV",
+            "SAV",
+            "SAV",
+            "Homme",
+            "Homme",
+            "Chaussures"
+        ],
+
+        "Supply Chain":[
+            "A DEFINIR",
+            "Collection",
+            "Collection",
+            "Stock",
+            "Stock",
+            "Collection"
+        ],
+
+        "Produit":[
+            "M981",
+            "M981",
+            "M981",
+            "TX100",
+            "TX200",
+            "SH100"
+        ],
+
+        "Statut":[
+            "Actif",
+            "Actif",
+            "Inactif",
+            "Actif",
+            "Actif",
+            "Inactif"
+        ]
+    })
 
 if "filtered_df" not in st.session_state:
     st.session_state.filtered_df = st.session_state.df.copy()
 
 df = st.session_state.df
-
-with st.sidebar:
-    if st.button("🔄 Rafraîchir les données Snowflake"):
-        load_articles.clear()
-        st.session_state.df = load_articles()
-        st.session_state.filtered_df = st.session_state.df.copy()
-        st.rerun()
 
 # --------------------------------------------------------
 # WIDGET KEYS FOR THE FILTER FIELDS
