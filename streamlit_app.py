@@ -239,7 +239,7 @@ with tabs[3]:
     # FILTER FUNCTION
     # ====================================================
 
-def apply_filters(data):
+    def apply_filters(data):
 
     filtered = data.copy()
 
@@ -293,7 +293,7 @@ def apply_filters(data):
             filtered["REF_ARTICLE"].str.contains(ref_article)
         ]
 
-    return filtered
+        return filtered
 
     # ====================================================
     # BUTTONS
