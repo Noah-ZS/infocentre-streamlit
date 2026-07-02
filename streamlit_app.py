@@ -245,7 +245,7 @@ with tabs[3]:
 
         if metier != "Tous":
             filtered = filtered[
-                filtered["Métier"] == metier
+                filtered["METIER"] == metier
             ]
 
         if code_coloris:
