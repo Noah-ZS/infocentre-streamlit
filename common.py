@@ -69,8 +69,14 @@ def inject_global_css():
         }
 
         #MainMenu, footer { visibility: hidden; height: 0; }
-        header[data-testid="stHeader"] { display: none; }
         div[data-testid="stDecoration"] { display: none; }
+        div[data-testid="stToolbar"] { visibility: hidden; }
+        header[data-testid="stHeader"] {
+            background: transparent !important;
+            box-shadow: none !important;
+            height: 2.4rem !important;
+            min-height: 2.4rem !important;
+        }
         .stApp { background: #FFFFFF; }
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; color: var(--ink); }
         .font-serif { font-family: 'Fraunces', serif; }
@@ -78,7 +84,7 @@ def inject_global_css():
         section.main .block-container {
             max-width: 1320px;
             margin: 0 auto;
-            padding: 1.2rem 3rem 4rem 3rem;
+            padding: 1.5rem 3rem 4rem 3rem;
         }
 
         /* ---------------- SIDEBAR ---------------- */
