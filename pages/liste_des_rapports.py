@@ -29,6 +29,58 @@ st.markdown(
 )
 
 # ============================================================
+# SCOPED STYLE FIXES
+# Targets only the search row and the report table rows via
+# Streamlit's st.container(key=...) -> ".st-key-<name>" class,
+# so nothing else on the page is affected.
+# ============================================================
+
+st.markdown(
+    """
+    <style>
+    /* ---- Search row: align input + button on the same baseline ---- */
+    .st-key-report_search_row [data-testid="stHorizontalBlock"] {
+        align-items: center;
+    }
+    .st-key-report_search_row div.lr-search-btn {
+        margin: 0 !important;
+    }
+    .st-key-report_search_row .stTextInput,
+    .st-key-report_search_row .stButton {
+        margin: 0 !important;
+    }
+    .st-key-report_search_row .stTextInput input {
+        height: 42px;
+    }
+    .st-key-report_search_row .stButton > button {
+        height: 42px;
+    }
+
+    /* ---- Report table: tighter row height ---- */
+    .st-key-rl_table_rows [data-testid="stVerticalBlock"] {
+        gap: 0.3rem !important;
+    }
+    .st-key-rl_table_rows hr {
+        margin: 2px 0 !important;
+    }
+    .st-key-rl_table_rows [data-testid="column"] {
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+    .st-key-rl_table_rows .rl-report-title {
+        margin-bottom: 0px;
+        line-height: 1.25;
+    }
+    .st-key-rl_table_rows .rl-report-desc {
+        margin-top: 1px;
+        line-height: 1.2;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ============================================================
 # IN-APP TAB STATE
 # "Liste des rapports" is always open. "Article - Liste des
 # Coloris / Taille" opens as a 2nd, closeable in-app tab when
@@ -118,23 +170,24 @@ else:
 
     # ---------------- SEARCH ROW ----------------
 
-    search_col, btn_col, spacer_col, fav_col = st.columns([5, 1, 3, 1.4])
+    with st.container(key="report_search_row"):
+        search_col, btn_col, spacer_col, fav_col = st.columns([5, 1, 3, 1.4])
 
-    with search_col:
-        st.text_input(
-            "Recherche",
-            placeholder="Rechercher un rapport par nom, numéro ou mot-clé...",
-            label_visibility="collapsed",
-            key="report_search",
-        )
+        with search_col:
+            st.text_input(
+                "Recherche",
+                placeholder="Rechercher un rapport par nom, numéro ou mot-clé...",
+                label_visibility="collapsed",
+                key="report_search",
+            )
 
-    with btn_col:
-        st.markdown('<div class="lr-search-btn">', unsafe_allow_html=True)
-        st.button("Rechercher", key="report_search_btn", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        with btn_col:
+            st.markdown('<div class="lr-search-btn">', unsafe_allow_html=True)
+            st.button("Rechercher", key="report_search_btn", use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    with fav_col:
-        st.button("☆  Mes favoris", key="mes_favoris_btn", use_container_width=True)
+        with fav_col:
+            st.button("☆  Mes favoris", key="mes_favoris_btn", use_container_width=True)
 
     st.markdown('<div style="height:22px;"></div>', unsafe_allow_html=True)
 
@@ -384,72 +437,73 @@ else:
 
         st.markdown('<div style="height:6px;"></div>', unsafe_allow_html=True)
 
-        st.markdown(
-            """
-            <div class="rl-table-header">
-                <div>Rapport</div>
-                <div>Numéro</div>
-                <div>Dossier</div>
-                <div></div>
-                <div></div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        with st.container(key="rl_table_rows"):
+            st.markdown(
+                """
+                <div class="rl-table-header">
+                    <div>Rapport</div>
+                    <div>Numéro</div>
+                    <div>Dossier</div>
+                    <div></div>
+                    <div></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        def render_row(r):
-            cols = st.columns([5, 1, 3, 0.5, 0.5])
+            def render_row(r):
+                cols = st.columns([5, 1, 3, 0.5, 0.5])
 
-            with cols[0]:
-                icon, text = st.columns([0.12, 0.88])
+                with cols[0]:
+                    icon, text = st.columns([0.12, 0.88])
 
-                with icon:
-                    st.markdown(
-                        f'<div class="rl-report-icon">{ICON_DOC}</div>',
-                        unsafe_allow_html=True,
-                    )
-
-                with text:
-                    if r["page"] == "article_coloris":
-                        if st.button(
-                            r["titre"],
-                            key=f"title_{r['numero']}",
-                            type="tertiary",
-                        ):
-                            _open_article_tab()  # or st.switch_page(...)
-                    else:
+                    with icon:
                         st.markdown(
-                            f'<div class="rl-report-title">{r["titre"]}</div>',
+                            f'<div class="rl-report-icon">{ICON_DOC}</div>',
                             unsafe_allow_html=True,
                         )
 
+                    with text:
+                        if r["page"] == "article_coloris":
+                            if st.button(
+                                r["titre"],
+                                key=f"title_{r['numero']}",
+                                type="tertiary",
+                            ):
+                                _open_article_tab()  # or st.switch_page(...)
+                        else:
+                            st.markdown(
+                                f'<div class="rl-report-title">{r["titre"]}</div>',
+                                unsafe_allow_html=True,
+                            )
+
+                        st.markdown(
+                            f'<div class="rl-report-desc">{r["desc"]}</div>',
+                            unsafe_allow_html=True,
+                        )
+
+                with cols[1]:
+                    st.write(r["numero"])
+
+                with cols[2]:
+                    st.write(r["dossier"])
+
+                with cols[3]:
                     st.markdown(
-                        f'<div class="rl-report-desc">{r["desc"]}</div>',
+                        f'<div class="rl-star">{ICON_STAR}</div>',
                         unsafe_allow_html=True,
                     )
 
-            with cols[1]:
-                st.write(r["numero"])
+                with cols[4]:
+                    st.markdown(
+                        f'<div class="rl-kebab">{ICON_KEBAB}</div>',
+                        unsafe_allow_html=True,
+                    )
 
-            with cols[2]:
-                st.write(r["dossier"])
+                st.divider()
 
-            with cols[3]:
-                st.markdown(
-                    f'<div class="rl-star">{ICON_STAR}</div>',
-                    unsafe_allow_html=True,
-                )
-
-            with cols[4]:
-                st.markdown(
-                    f'<div class="rl-kebab">{ICON_KEBAB}</div>',
-                    unsafe_allow_html=True,
-                )
-
-            st.divider()
-
-        for _, report in reports.iterrows():
-            render_row(report)
+            for _, report in reports.iterrows():
+                render_row(report)
 
 # ---------------- FOOTER: PAGE SIZE + PAGINATION ----------------
 
