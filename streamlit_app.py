@@ -1,5 +1,11 @@
 import streamlit as st
 import pandas as pd
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 
 # --------------------------------------------------------
 # PAGE CONFIG
@@ -44,6 +50,19 @@ st.markdown(
     }
     div[data-testid="stCheckbox"] {
         padding-top: 6px;
+    }
+
+    /* ---- Export dialog styling ---- */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 10px !important;
+    }
+    button[kind="primary"] {
+        background-color: #D9642A !important;
+        border-color: #D9642A !important;
+    }
+    button[kind="primary"]:hover {
+        background-color: #C15720 !important;
+        border-color: #C15720 !important;
     }
     </style>
     """,
@@ -105,6 +124,49 @@ def reset_filters():
     Does NOT hide the table again — if it was visible, it stays visible,
     now showing the full unfiltered dataset."""
     st.session_state.reset_counter += 1
+
+# --------------------------------------------------------
+# EMAIL SENDING (Gmail SMTP)
+# --------------------------------------------------------
+# Requires a Google App Password (NOT your regular Gmail password)
+# stored in .streamlit/secrets.toml as:
+#
+#   smtp_password = "xxxx xxxx xxxx xxxx"
+#
+# Generate one at: https://myaccount.google.com/apppasswords
+# (Gmail must have 2-Step Verification enabled to create App Passwords.)
+
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SENDER_EMAIL = "noahsamueljubain@gmail.com"
+
+
+def send_email_with_attachment(to_email, subject, body, attachment_bytes=None, attachment_filename=None):
+    """Send an email via Gmail SMTP (STARTTLS on port 587), optionally
+    with a file attached. Raises on failure — caller is expected to
+    wrap this in a try/except and show st.success / st.error."""
+
+    msg = MIMEMultipart()
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body or "", "plain"))
+
+    if attachment_bytes is not None and attachment_filename:
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(attachment_bytes)
+        encoders.encode_base64(part)
+        part.add_header(
+            "Content-Disposition",
+            f'attachment; filename="{attachment_filename}"'
+        )
+        msg.attach(part)
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        server.starttls(context=context)
+        server.login(SENDER_EMAIL, st.secrets["smtp_password"])
+        server.sendmail(SENDER_EMAIL, to_email, msg.as_string())
 
 # --------------------------------------------------------
 # TOP NAVIGATION
@@ -306,6 +368,108 @@ with tabs[3]:
         return filtered
 
     # ====================================================
+    # EXPORT DIALOG
+    # Replicates the "Exporter le rapport" modal: file format
+    # picker, an "email delivery" card (SMTP send via Gmail),
+    # and a "generate now" card (direct CSV download).
+    # ====================================================
+
+    @st.dialog("Exporter le rapport")
+    def export_dialog():
+
+        st.write("Vous avez demandé un **EXPORT**.")
+
+        file_format = st.selectbox(
+            "Format de fichier",
+            [
+                "📄 CSV séparateur virgule avec symbole décimale : virgule",
+                "📄 CSV séparateur point-virgule avec symbole décimale : virgule",
+            ],
+            key="export_format"
+        )
+
+        separator = ";" if "point-virgule" in file_format else ","
+
+        export_source = apply_filters(df) if st.session_state.show_table else df.iloc[0:0]
+        csv_bytes = export_source.to_csv(index=False, sep=separator).encode("utf-8-sig")
+
+        st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
+        # ---------------- EMAIL DELIVERY CARD ----------------
+
+        with st.container(border=True):
+
+            st.markdown("📧 &nbsp; **Pour recevoir le rapport par e-mail**")
+
+            to_email = st.text_input(
+                "E-mail du destinataire",
+                value="generic.cognos@hermes.com",
+                key="export_to_email"
+            )
+
+            subject = st.text_input(
+                "Objet de l'e-mail",
+                value="Ariane - Rapport n°646 : Article - Liste des Coloris / Taille : Extraction détaillée",
+                key="export_subject"
+            )
+
+            body = st.text_area(
+                "Texte de l'e-mail (optionnel)",
+                placeholder="Ajoutez un message personnalisé (optionnel)...",
+                key="export_body"
+            )
+
+            spacer, c_cancel, c_ok = st.columns([4, 1, 1])
+
+            with c_cancel:
+                if st.button("Annuler", key="cancel_email_btn"):
+                    st.rerun()
+
+            with c_ok:
+                if st.button("OK", key="ok_email_btn", type="primary"):
+                    try:
+                        send_email_with_attachment(
+                            to_email=to_email,
+                            subject=subject,
+                            body=body,
+                            attachment_bytes=csv_bytes,
+                            attachment_filename="articles_export.csv",
+                        )
+                        st.success("✅ E-mail envoyé avec succès.")
+                    except Exception as e:
+                        st.error(f"❌ Échec de l'envoi de l'e-mail : {e}")
+
+        st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
+        # ---------------- GENERATE NOW CARD ----------------
+
+        with st.container(border=True):
+
+            st.markdown("ℹ️ &nbsp; **Pour générer maintenant le fichier export**")
+
+            st.warning(
+                "**Attention** — L'application n'est pas en mesure d'estimer le temps que "
+                "prendra l'extraction. Les requêtes les plus lourdes peuvent provoquer une "
+                "absence de réponse du serveur (timeout). Dans ce cas, nous vous invitons "
+                "à utiliser l'export par email."
+            )
+
+            spacer2, c_cancel2, c_ok2 = st.columns([4, 1, 1])
+
+            with c_cancel2:
+                if st.button("Annuler", key="cancel_download_btn"):
+                    st.rerun()
+
+            with c_ok2:
+                st.download_button(
+                    "OK",
+                    data=csv_bytes,
+                    file_name="articles_export.csv",
+                    mime="text/csv",
+                    key="ok_download_btn"
+                )
+
+    # ====================================================
     # BUTTONS
     # ====================================================
 
@@ -326,17 +490,10 @@ with tabs[3]:
 
     with b3:
 
-        # Exporter: download whatever is currently displayed as CSV.
-        _export_source = apply_filters(df) if st.session_state.show_table else df.iloc[0:0]
-        _export_csv = _export_source.to_csv(index=False).encode("utf-8-sig")
-
-        st.download_button(
-            "Exporter",
-            data=_export_csv,
-            file_name="articles_export.csv",
-            mime="text/csv",
-            disabled=not st.session_state.show_table
-        )
+        # Exporter: opens the "Exporter le rapport" dialog (email
+        # delivery or immediate CSV download), matching the mockup.
+        if st.button("Exporter", disabled=not st.session_state.show_table):
+            export_dialog()
 
     with b4:
 
