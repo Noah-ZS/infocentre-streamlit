@@ -229,15 +229,28 @@ def inject_global_css():
         .rl-kebab { color: #B4AFA6; }
 
         /* Overlay click target for the "open as in-app tab" row.
-           Pairs with st.container(key=f"clickrow_{numero}") in the page. */
-        [class*="st-key-clickrow_"] { position: relative; }
-        [class*="st-key-clickrow_"] .stButton {
-            position: absolute; inset: 0; margin: 0;
+/* Row-as-button: title cell for the clickable "open as tab" row */
+        [class*="st-key-row_"] {
+            border-bottom: 1px solid var(--line);
+            padding: 10px 4px;
         }
-        [class*="st-key-clickrow_"] .stButton button {
-            width: 100%; height: 100%;
-            opacity: 0; cursor: pointer;
-            border: none; padding: 0; margin: 0;
+        [class*="st-key-row_"] .stButton button {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            min-height: unset !important;
+            text-align: left !important;
+            justify-content: flex-start !important;
+            font-size: 14.5px !important;
+            font-weight: 600 !important;
+            color: var(--ink) !important;
+        }
+        [class*="st-key-row_"] .stButton button:hover {
+            color: var(--accent) !important;
+            text-decoration: underline;
+        }
+        .rl-report-desc-inline { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
         }
 
         .pill-btn {

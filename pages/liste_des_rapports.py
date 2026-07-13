@@ -212,46 +212,61 @@ with right_col:
         unsafe_allow_html=True,
     )
 
-    # ---- Table rows ----
+# ---- Table rows ----
     for _, r in reports.iterrows():
         star_class = "filled" if r["favori"] else ""
         is_tab_trigger = r["page"] == "article_coloris"
 
-        row_html = f"""
-        <div class="rl-row">
-            <div class="rl-report-cell">
-                <div class="rl-report-icon">{ICON_DOC}</div>
-                <div>
-                    <div class="rl-report-title">{r['titre']}</div>
-                    <div class="rl-report-desc">{r['desc']}</div>
-                </div>
-            </div>
-            <div class="rl-cell">{r['numero']}</div>
-            <div class="rl-cell" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{r['dossier']}</div>
-            <div class="rl-star {star_class}">{ICON_STAR}</div>
-            <div class="rl-kebab">{ICON_KEBAB}</div>
-        </div>
-        """
+        with st.container(key=f"row_{r['numero']}"):
+            c_report, c_num, c_dossier, c_star, c_kebab = st.columns(
+                [4, 0.9, 2.2, 0.34, 0.26], gap="small"
+            )
 
-        if is_tab_trigger:
-            # Wrap the styled row in a keyed container so common.py's CSS
-            # can lay an invisible, full-size st.button over it — that
-            # button is the real click target, since native buttons
-            # can't hold this row's HTML.
-            with st.container(key=f"clickrow_{r['numero']}"):
-                st.markdown(row_html, unsafe_allow_html=True)
-                if st.button(
-                    " ",
-                    key=f"open_tab_{r['numero']}",
-                    help=f"Ouvrir « {r['titre']} » dans un nouvel onglet",
-                ):
-                    open_dynamic_tab(
-                        key=f"tab_{r['numero']}",
-                        label=r["titre"],
-                        target_page="pages/article_coloris.py",
+            with c_report:
+                if is_tab_trigger:
+                    clicked = st.button(
+                        r["titre"],
+                        key=f"open_tab_{r['numero']}",
+                        use_container_width=True,
                     )
-        else:
-            st.markdown(row_html, unsafe_allow_html=True)
+                    st.markdown(
+                        f'<div class="rl-report-desc-inline">{r["desc"]}</div>',
+                        unsafe_allow_html=True,
+                    )
+                    if clicked:
+                        open_dynamic_tab(
+                            key=f"tab_{r['numero']}",
+                            label=r["titre"],
+                            target_page="pages/article_coloris.py",
+                        )
+                else:
+                    st.markdown(
+                        f"""
+                        <div class="rl-report-cell">
+                            <div class="rl-report-icon">{ICON_DOC}</div>
+                            <div>
+                                <div class="rl-report-title">{r['titre']}</div>
+                                <div class="rl-report-desc">{r['desc']}</div>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+            with c_num:
+                st.markdown(f'<div class="rl-cell">{r["numero"]}</div>', unsafe_allow_html=True)
+
+            with c_dossier:
+                st.markdown(
+                    f'<div class="rl-cell" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{r["dossier"]}</div>',
+                    unsafe_allow_html=True,
+                )
+
+            with c_star:
+                st.markdown(f'<div class="rl-star {star_class}">{ICON_STAR}</div>', unsafe_allow_html=True)
+
+            with c_kebab:
+                st.markdown(f'<div class="rl-kebab">{ICON_KEBAB}</div>', unsafe_allow_html=True)
 
     st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
