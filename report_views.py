@@ -309,7 +309,7 @@ def render_article_coloris_view():
             where.append(f"SUPPLY_CHAIN = '{supply}'")
         if statut != "Tous":
             where.append(f"STATUT = '{statut}'")
-        sql = "SELECT *\nFROM SNOWFLAKE_LEARNING_DB.STREAMLIT_TEST.ARTICLES"
+        sql = "SELECT *\nFROM INFOCENTRE_DB.PUBLIC.ARTICLES"
         if where:
             sql += "\nWHERE " + "\n  AND ".join(where)
         return sql
