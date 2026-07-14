@@ -276,105 +276,20 @@ def render_article_coloris_view():
 
 def render_mesures_produits_view():
 
-    _inject_compact_filter_css()
+# Inside render_mesures_produits_view() in report_views.py
 
-    if "mes_df" not in st.session_state:
-        st.session_state.mes_df = load_mesures_produits()
-    df = st.session_state.mes_df
-
-    if "mes_show_table" not in st.session_state:
-        st.session_state.mes_show_table = False
-
-    if "mes_reset_counter" not in st.session_state:
-        st.session_state.mes_reset_counter = 0
-
-    def _k(name):
-        return f"mes_{name}_{st.session_state.mes_reset_counter}"
-
-    def reveal_table():
-        st.session_state.mes_show_table = True
-
-    def reset_filters():
-        st.session_state.mes_reset_counter += 1
-
-    st.text_input(
-        "Rapport", value="Rapport n°1722 : Mesures des Nouveaux Produits",
-        disabled=True, key="mes_rapport_label"
-    )
-    st.subheader("Suivi des mesures et performances produits")
-    st.divider()
-
-    col1, col2, col3 = st.columns([1.4, 1.2, 2])
-    with col1:
-        categories = st.multiselect(
-            "Catégorie", sorted(df["CATEGORIE"].unique()), key=_k("f_categorie")
-        )
-    with col2:
-        statut = st.selectbox(
-            "Statut", ["Tous"] + sorted(df["STATUT_TEST"].unique()), key=_k("f_statut")
-        )
-    with col3:
-        search = st.text_input(
-            "Rechercher", placeholder="Code ou nom de produit...", key=_k("f_search")
-        )
-
-    st.divider()
-
-    def apply_filters(data):
-        filtered = data.copy()
-        if categories:
-            filtered = filtered[filtered["CATEGORIE"].isin(categories)]
-        if statut != "Tous":
-            filtered = filtered[filtered["STATUT_TEST"] == statut]
-        if search:
-            mask = (
-                filtered["CODE_PRODUIT"].str.contains(search, case=False)
-                | filtered["NOM_PRODUIT"].str.contains(search, case=False)
-            )
-            filtered = filtered[mask]
-        return filtered
-
-    b1, b2, b3 = st.columns(3)
-    with b1:
-        st.button("Afficher", on_click=reveal_table, key="mes_afficher_btn")
-    with b2:
-        st.button("Réinitialiser", on_click=reset_filters, key="mes_reinit_btn")
-    with b3:
-        export_source = apply_filters(df) if st.session_state.mes_show_table else df.iloc[0:0]
-        csv_bytes = export_source.to_csv(index=False).encode("utf-8-sig")
-        if st.button("Exporter", disabled=not st.session_state.mes_show_table, key="mes_exporter_btn"):
-            _make_export_dialog(
-                "mes", csv_bytes,
-                "Ariane - Rapport n°1722 : Mesures des Nouveaux Produits : Extraction détaillée",
-                "mesures_produits_export.csv",
-            )()
-
-    st.divider()
-
-    if st.session_state.mes_show_table:
-        st.session_state.mes_filtered_df = apply_filters(df)
-        st.data_editor(st.session_state.mes_filtered_df, use_container_width=True, hide_index=True, height=500)
-    else:
-        st.info("Cliquez sur **Afficher** pour afficher les résultats.")
-
-    def build_sql():
-        where = []
-        if categories:
-            cat_list = ", ".join(f"'{c}'" for c in categories)
-            where.append(f"CATEGORIE IN ({cat_list})")
-        if statut != "Tous":
-            where.append(f"STATUT_TEST = '{statut}'")
-        if search:
-            where.append(f"(CODE_PRODUIT ILIKE '%{search}%' OR NOM_PRODUIT ILIKE '%{search}%')")
-        sql = "SELECT *\nFROM INFOCENTRE_DB.PUBLIC.MESURES_NOUVEAUX_PRODUITS"
-        if where:
-            sql += "\nWHERE " + "\n  AND ".join(where)
-        return sql
-
-    st.divider()
-    with st.expander("Afficher la requête SQL"):
-        st.code(build_sql(), language="sql")
-
+b1, b2, b3, spacer = st.columns([1, 1, 1, 4])
+with b1:
+    st.button("Afficher", on_click=reveal_table, key="mes_afficher_btn", type="primary", use_container_width=True)
+with b2:
+    # Streamlit natively doesn't support "outlined" primary. 
+    # It will render as a secondary button unless we inject CSS targeting this specific key.
+    st.button("Réinitialiser", on_click=reset_filters, key="mes_reinit_btn", use_container_width=True)
+with b3:
+    export_source = apply_filters(df) if st.session_state.mes_show_table else df.iloc[0:0]
+    csv_bytes = export_source.to_csv(index=False).encode("utf-8-sig")
+    if st.button("Exporter", disabled=not st.session_state.mes_show_table, key="mes_exporter_btn", use_container_width=True):
+         _make_export_dialog(...)()
 
 # ================================================================
 # 3. COMMANDES - DÉTAIL

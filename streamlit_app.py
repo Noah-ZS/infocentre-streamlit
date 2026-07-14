@@ -1,106 +1,63 @@
-"""
-Router / entrypoint for the Infocentre app.
-Run with: streamlit run streamlit_app.py
-
-Owns the ONE allowed call to st.set_page_config(), injects the
-global CSS once, declares every page via st.Page, renders the
-shared custom sidebar, then hands off to whichever page is active.
-"""
-
 import streamlit as st
-from common import inject_global_css, render_sidebar
+from common import render_topbar, ICON_STAR, ICON_DOC, ICON_KEBAB
 
-# 1. Page Config
-st.set_page_config(page_title="Infocentre", layout="wide")
+render_topbar("Version Production 5.2.1")
 
-# 2. Inject your global tokens
-inject_global_css()
-
-# 3. BULLETPROOF TOP-SPACE REMOVER (For Streamlit 1.36+)
-# We place this here so it is guaranteed to inject on every single page switch.
 st.markdown("""
-    <style>
-    /* Target all known Streamlit main wrappers for modern versions */
-    .block-container, 
-    [data-testid="stMainBlockContainer"], 
-    [data-testid="stAppViewBlockContainer"] {
-        padding-top: 1.5rem !important; /* Pulls content to the very top */
-        padding-bottom: 2rem !important;
-        margin-top: 0 !important;
-    }
+<div class="hero-section">
+    <div class="hero-title">Bienvenue sur votre Infocentre</div>
+    <div class="hero-subtitle">Votre portail de Business Intelligence dédié à la performance.</div>
     
-    /* Completely nuke the native header block */
-    header, 
-    [data-testid="stHeader"], 
-    .stAppHeader {
-        display: none !important;
-        height: 0px !important;
-        min-height: 0px !important;
-        visibility: hidden !important;
-    }
-    </style>
+    <div class="kpi-container">
+        <div class="kpi-card-modern">
+            <div class="kpi-title-modern">Rapports générés ce mois</div>
+            <div class="kpi-value-modern">142</div>
+            <div class="kpi-delta-modern delta-pos">+12% vs mois précédent</div>
+        </div>
+        <div class="kpi-card-modern">
+            <div class="kpi-title-modern">Temps moyen d'exécution</div>
+            <div class="kpi-value-modern">1.8 s</div>
+            <div class="kpi-delta-modern delta-pos" style="color: #6E6A63;">-0.4 s vs mois précédent</div>
+        </div>
+        <div class="kpi-card-modern">
+            <div class="kpi-title-modern">Rapports favoris</div>
+            <div class="kpi-value-modern">18</div>
+            <div class="kpi-delta-modern delta-pos">+3 vs mois précédent</div>
+        </div>
+    </div>
+</div>
 """, unsafe_allow_html=True)
 
-# ------------------------------------------------------------
-# PAGES
-# ------------------------------------------------------------
+col1, col2 = st.columns(2, gap="large")
 
-accueil_page = st.Page(
-    "pages/accueil.py", title="Accueil", icon=":material/home:",
-    url_path="accueil", default=True
-)
-rapports_page = st.Page(
-    "pages/liste_des_rapports.py", title="Liste des rapports", icon=":material/description:",
-    url_path="liste-des-rapports"
-)
-suivi_page = st.Page(
-    "pages/suivi_exploit.py", title="Suivi de l'exploit", icon=":material/monitoring:",
-    url_path="suivi-exploit"
-)
-open_to_buy_page = st.Page(
-    "pages/open_to_buy.py", title="Open to buy", icon=":material/shopping_bag:",
-    url_path="open-to-buy"
-)
-password_page = st.Page(
-    "pages/changer_mot_de_passe.py", title="Changer votre mot de passe", icon=":material/lock_reset:",
-    url_path="changer-mot-de-passe"
-)
+with col1:
+    st.markdown('<div class="panel-title" style="margin-bottom:15px;">Rapports récents <span style="float:right; font-size:13px; color:#6E6A63; cursor:pointer;">Voir tout</span></div>', unsafe_allow_html=True)
+    # Loop to generate recent report lists
+    for _ in range(4):
+        st.markdown(f"""
+        <div class="list-row" style="background: #F8F6F2; border-radius: 12px; margin-bottom: 10px; padding: 15px;">
+            <div class="list-icon">{ICON_DOC}</div>
+            <div>
+                <div class="list-title">Commandes - Détail</div>
+                <div class="list-category">Gestion Commerciale</div>
+            </div>
+            <div class="list-meta">Il y a 2 h</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-# Registered for routing/deep-linking but NOT shown in the main
-# sidebar nav list — each is opened as an in-app tab from within
-# liste_des_rapports.py by clicking its report row.
-article_coloris_page = st.Page(
-    "pages/article_coloris.py",
-    title="Article - Liste des Coloris / Taille",
-    url_path="article-coloris"
-)
-mesures_produits_page = st.Page(
-    "pages/mesures_produits.py",
-    title="Mesures des Nouveaux Produits",
-    url_path="mesures-produits"
-)
-commandes_detail_page = st.Page(
-    "pages/commandes_detail.py",
-    title="Commandes - Détail",
-    url_path="commandes-detail"
-)
-
-NAV_ITEMS = [
-    {"page": accueil_page, "label": "Accueil", "icon": ":material/home:"},
-    {"page": rapports_page, "label": "Liste des rapports", "icon": ":material/description:"},
-    {"page": suivi_page, "label": "Suivi de l'exploit", "icon": ":material/monitoring:"},
-    {"page": open_to_buy_page, "label": "Open to buy", "icon": ":material/shopping_bag:"},
-    {"page": password_page, "label": "Changer votre mot de passe", "icon": ":material/lock_reset:"},
-]
-
-pg = st.navigation(
-    [
-        accueil_page, rapports_page, suivi_page, open_to_buy_page, password_page,
-        article_coloris_page, mesures_produits_page, commandes_detail_page,
-    ],
-    position="hidden",
-)
-
-render_sidebar(NAV_ITEMS)
-
-pg.run()
+with col2:
+    st.markdown('<div class="panel-title" style="margin-bottom:15px;">Vos favoris <span style="float:right; font-size:13px; color:#6E6A63; cursor:pointer;">Voir tout</span></div>', unsafe_allow_html=True)
+    # Loop to generate favorite cards (2x2 grid approach)
+    fav_cols = st.columns(2)
+    for i in range(4):
+        with fav_cols[i%2]:
+            st.markdown(f"""
+            <div class="report-card" style="padding: 15px; margin-bottom:10px;">
+                <div class="rc-header" style="margin-bottom:8px;">
+                    <div style="color:#D9642A;">{ICON_STAR}</div>
+                    <div class="rl-kebab">{ICON_KEBAB}</div>
+                </div>
+                <div class="rc-title" style="font-size:14px;">Commande - Détail</div>
+                <div class="rc-id" style="margin-bottom:0;">Département</div>
+            </div>
+            """, unsafe_allow_html=True)

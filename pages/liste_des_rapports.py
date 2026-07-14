@@ -289,42 +289,35 @@ else:
         # without the click behavior, styled the same way so the
         # table reads as one consistent list.
 
-        for _, r in reports.iterrows():
+        # Replace the TABLE ROWS section in liste_des_rapports.py with this:
 
-            rc1, rc2, rc3, rc4, rc5 = st.columns([3, 0.6, 1.6, 0.25, 0.2])
+        # ---------------- GRID CARDS ----------------
+        st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
 
-            with rc1:
-                icon_col, text_col = st.columns([0.13, 0.87])
-                with icon_col:
-                    st.markdown(f'<div class="rl-report-icon">{ICON_DOC}</div>', unsafe_allow_html=True)
-                with text_col:
-                    if pd.notna(r["key"]):
-                        st.button(
-                            r["titre"],
-                            key=f"open_{r['key']}_title_btn",
-                            on_click=_open_tab,
-                            args=(r["key"],),
-                        )
-                    else:
-                        st.markdown(f'<div class="rl-title-link">{r["titre"]}</div>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="rl-report-desc">{r["desc"]}</div>', unsafe_allow_html=True)
+        grid_col1, grid_col2 = st.columns(2, gap="medium")
 
-            with rc2:
-                st.markdown(f'<div class="rl-cell" style="padding-top:8px;">{r["numero"]}</div>', unsafe_allow_html=True)
+        for i, (_, r) in enumerate(reports.iterrows()):
+            target_col = grid_col1 if i % 2 == 0 else grid_col2
+            
+            with target_col:
+                fav_tag = f'<div class="rc-tag">{ICON_STAR} Favoris</div>' if r["favori"] else '<div></div>'
+                
+                st.markdown(f"""
+                <div class="report-card">
+                    <div class="rc-header">
+                        {fav_tag}
+                        <div style="color: #B4AFA6;">{ICON_KEBAB}</div>
+                    </div>
+                    <div class="rc-title">{r['titre']}</div>
+                    <div class="rc-id">{r['numero']}</div>
+                    <div class="rc-footer">
+                        <div>{r['dossier']}</div>
+                        <div>26/03/2024</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            with rc3:
-                st.markdown(f'<div class="rl-cell" style="padding-top:8px;">{r["dossier"]}</div>', unsafe_allow_html=True)
-
-            with rc4:
-                star_class = "filled" if r["favori"] else ""
-                st.markdown(f'<div class="rl-star {star_class}" style="padding-top:8px;">{ICON_STAR}</div>', unsafe_allow_html=True)
-
-            with rc5:
-                st.markdown(f'<div class="rl-kebab" style="padding-top:8px;">{ICON_KEBAB}</div>', unsafe_allow_html=True)
-
-            st.markdown('<hr class="rl-row-hr">', unsafe_allow_html=True)
-
-        st.markdown('<div style="height:6px;"></div>', unsafe_allow_html=True)
+        # Remove the th1, th2 (table headers) and rl-row-hr elements completely.
 
         # ---------------- FOOTER: PAGE SIZE + PAGINATION ----------------
 

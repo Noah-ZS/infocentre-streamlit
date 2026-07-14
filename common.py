@@ -51,232 +51,77 @@ ICON_SETTINGS = icon('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0
 # GLOBAL DESIGN TOKENS + CSS
 # ============================================================
 
-def inject_global_css():
-    st.markdown(
-        """
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+# Add these rules inside the <style> block of your inject_global_css() function in common.py
 
-        :root {
-            --ink: #1C1B19;
-            --ink-soft: #6E6A63;
-            --accent: #D9642A;
-            --accent-bg: #FBEAE0;
-            --cream: #FAF8F4;
-            --card: #F8F6F2;
-            --line: #EAE5DC;
-            --success: #1E8A5F;
-        }
+'''
+/* --- DASHBOARD HERO & KPIS --- */
+.hero-section {
+    background: linear-gradient(180deg, #EBE4D8 0%, #FAF8F4 100%);
+    padding: 40px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+}
+.hero-title { font-family: 'Fraunces', serif; font-size: 36px; font-weight: 600; color: #4A453E; margin-bottom: 8px; }
+.hero-subtitle { font-size: 16px; color: #6E6A63; margin-bottom: 30px; }
 
-        /* ---------------- STREAMLIT CHROME RESET (FIXES TOP DEAD SPACE) ---------------- */
-        #MainMenu, footer { visibility: hidden; height: 0; }
-        div[data-testid="stDecoration"] { display: none; }
-        div[data-testid="stToolbar"] { visibility: hidden; }
-        
-        /* Force clear hidden headers that take up blank vertical viewport room */
-        header[data-testid="stHeader"] {
-            display: none !important;
-            height: 0px !important;
-            min-height: 0px !important;
-        }
-        
-        .stApp { background: #FFFFFF; padding-top: 0 !important; }
-        html, body, [class*="css"] { font-family: 'Inter', sans-serif; color: var(--ink); }
-        .font-serif { font-family: 'Fraunces', serif; }
+.kpi-container { display: flex; gap: 20px; }
+.kpi-card-modern {
+    background: #FFFFFF;
+    border: 1px solid #EAE5DC;
+    border-radius: 16px;
+    padding: 24px;
+    flex: 1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+.kpi-title-modern { font-size: 14px; color: #6E6A63; font-weight: 500; margin-bottom: 12px; }
+.kpi-value-modern { font-family: 'Inter', sans-serif; font-size: 42px; font-weight: 600; color: #1C1B19; line-height: 1; }
+.kpi-delta-modern { font-size: 13px; font-weight: 500; margin-top: 10px; }
+.delta-pos { color: #1E8A5F; }
+.delta-neg { color: #D9642A; }
 
-        section.main {
-            padding-top: 0 !important;
-        }
-        
-        /* Strict adjustments to move top bars, layout titles, and metrics beautifully upward */
-        section.main .block-container {
-            max-width: 1320px;
-            margin: 0 auto;
-            padding: 1rem 3rem 4rem 3rem !important; /* Brought padding-top to 1rem to perfectly align main page with sidebar top */
-        }
+/* --- REPORT CARDS (GRID VIEW) --- */
+.report-card {
+    background: #FFFFFF;
+    border: 1px solid #EAE5DC;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+    transition: box-shadow 0.2s;
+}
+.report-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); cursor: pointer; }
+.rc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.rc-tag { background: #FBEAE0; color: #D9642A; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+.rc-title { font-size: 15px; font-weight: 600; color: #1C1B19; margin-bottom: 4px; line-height: 1.3; }
+.rc-id { font-size: 13px; color: #6E6A63; margin-bottom: 16px; }
+.rc-footer { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #8A857B; }
 
-        /* ---------------- SIDEBAR POLISHING ---------------- */
-
-        section[data-testid="stSidebar"] {
-            background: var(--cream);
-            border-right: 1px solid var(--line);
-            min-width: 272px;
-            max-width: 272px;
-        }
-        section[data-testid="stSidebar"] > div:first-child { 
-            padding: 1.5rem 1.3rem !important; /* Snug top-padding grid alignment */
-        }
-
-        .brand-word {
-            font-family: 'Fraunces', serif;
-            font-size: 28px; font-weight: 600; color: var(--ink);
-            line-height: 1.1; margin: 0px 0 2px 0;
-        }
-        .brand-sub {
-            font-family: 'Inter', sans-serif;
-            font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
-            color: var(--accent); margin-bottom: 22px;
-        }
-
-        /* Custom alignment for native st.page_link anchors */
-        section[data-testid="stSidebar"] a[data-testid^="stPageLink"] {
-            display: flex; align-items: center; gap: 10px;
-            padding: 9px 12px !important; border-radius: 8px;
-            font-size: 14.5px !important; font-weight: 500;
-            color: #57534A !important;
-            border-left: 3px solid transparent;
-            margin-bottom: 2px;
-        }
-        section[data-testid="stSidebar"] a[data-testid^="stPageLink"]:hover {
-            background: #F1EEE7;
-        }
-        section[data-testid="stSidebar"] a[data-testid^="stPageLink"][aria-current="page"] {
-            color: var(--accent) !important;
-            background: var(--accent-bg);
-            border-left: 3px solid var(--accent);
-        }
-
-        .sidebar-divider { height: 1px; background: var(--line); margin: 18px 0; }
-
-        .logout-row {
-            display: flex; align-items: center; gap: 10px;
-            color: #57534A; font-size: 14px; font-weight: 500; margin-top: 16px;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* ---------------- MAIN TOP BAR ---------------- */
-
-        .topbar {
-            display: flex; align-items: center; justify-content: flex-end;
-            gap: 14px; color: var(--ink-soft); font-size: 13.5px; margin: 0 0 12px 0;
-            padding-top: 0;
-        }
-        .avatar {
-            width: 34px; height: 34px; border-radius: 50%;
-            background: #EFECE6; color: var(--ink);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12.5px; font-weight: 600;
-        }
-
-        .page-title { 
-            font-family: 'Fraunces', serif; 
-            font-size: 38px; 
-            font-weight: 600; 
-            color: var(--ink); 
-            margin: 0 0 4px 0; 
-            line-height: 1.15;
-        }
-        .page-subtitle { color: var(--ink-soft); font-size: 15px; margin: 0 0 20px 0; }
-
-        /* ---------------- KPI CARDS (accueil) ---------------- */
-
-        .kpi-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 20px 22px; height: 100%; }
-        .kpi-icon { width: 42px; height: 42px; border-radius: 10px; background: #FFFFFF; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--accent); margin-bottom: 14px; }
-        .kpi-label { font-size: 13.5px; color: var(--ink-soft); margin-bottom: 6px; }
-        .kpi-value { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
-        .kpi-delta { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--success); font-weight: 500; }
-
-        /* ---------------- LIST PANELS (accueil) ---------------- */
-
-        .panel { background: #FFFFFF; border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 12px 22px; height: 100%; }
-        .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-        .panel-title { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 600; color: var(--ink); }
-        .panel-link { display: flex; align-items: center; gap: 3px; color: var(--accent); font-size: 13px; font-weight: 600; }
-        .panel-divider { height: 1px; background: var(--line); margin: 10px 0 2px 0; }
-        .list-row { display: flex; align-items: center; gap: 12px; padding: 13px 2px; border-bottom: 1px solid var(--line); }
-        .list-row:last-child { border-bottom: none; }
-        .list-icon { width: 30px; height: 30px; border-radius: 7px; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: #8A857B; flex-shrink: 0; }
-        .list-icon.starred { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-bg); }
-        .list-title { font-size: 14.5px; font-weight: 500; color: var(--ink); }
-        .list-category { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
-        .list-meta { margin-left: auto; font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; }
-        .list-kebab { margin-left: auto; color: #B4AFA6; }
-        .panel-footer { display: flex; align-items: center; gap: 4px; color: var(--accent); font-size: 13.5px; font-weight: 600; padding: 14px 2px 4px 2px; }
-
-        /* ---------------- LISTE DES RAPPORTS ---------------- */
-
-        .repertoire-panel { background: #FFFFFF; border: 1px solid var(--line); border-radius: 14px; padding: 18px 16px; }
-        .repertoire-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; margin-bottom: 12px; }
-        .tree-item { display: flex; align-items: center; gap: 7px; padding: 6px 4px; font-size: 13.5px; color: #4A4640; border-radius: 6px; }
-        .tree-item:hover { background: #F5F2EC; }
-        .tree-item.tree-active { color: var(--accent); font-weight: 600; }
-        .tree-item.tree-parent-active { color: var(--accent); font-weight: 600; }
-        .tree-item .tree-chevron { color: #B4AFA6; flex-shrink: 0; }
-        .tree-item .tree-icon { color: #C9A227; flex-shrink: 0; }
-        .tree-item.tree-active .tree-icon, .tree-item.tree-parent-active .tree-icon { color: var(--accent); }
-        .tree-indent-1 { padding-left: 22px; }
-        .tree-footer { display: flex; align-items: center; gap: 8px; color: #57534A; font-size: 13px; font-weight: 500; padding: 12px 4px 2px 4px; margin-top: 8px; border-top: 1px solid var(--line); }
-
-        .rl-count { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; color: var(--ink); }
-
-        .rl-table-header {
-            display: grid;
-            grid-template-columns: minmax(260px,3fr) 90px minmax(220px,2fr) 34px 26px;
-            gap: 10px; padding: 0 4px 10px 4px; border-bottom: 1px solid var(--line);
-            font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
-        }
-        .rl-row {
-            display: grid;
-            grid-template-columns: minmax(260px,3fr) 90px minmax(220px,2fr) 34px 26px;
-            gap: 10px; padding: 14px 4px; border-bottom: 1px solid var(--line);
-            align-items: center; min-height: 62px;
-        }
-        .rl-row:last-child { border-bottom: none; }
-        .rl-report-cell { display: flex; align-items: flex-start; gap: 11px; }
-        .rl-report-icon { width: 30px; height: 30px; border-radius: 7px; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: #8A857B; flex-shrink: 0; margin-top: 1px; }
-        .rl-report-title { font-size: 14.5px; font-weight: 600; color: var(--ink); }
-        .rl-report-desc { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
-        .rl-cell { font-size: 13.5px; color: #4A4640; }
-        .rl-star { color: #C9C4B8; }
-        .rl-star.filled { color: var(--accent); }
-        .rl-kebab { color: #B4AFA6; }
-
-        .rl-title-link {
-            font-size: 14.5px; font-weight: 600; color: var(--ink);
-        }
-
-        [class*="st-key-open_"][class*="_title_btn"] button {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            height: auto !important;
-            min-height: 0 !important;
-            text-align: left !important;
-            justify-content: flex-start !important;
-        }
-        [class*="st-key-open_"][class*="_title_btn"] button p {
-            font-size: 14.5px !important;
-            font-weight: 600 !important;
-            color: var(--ink) !important;
-        }
-        [class*="st-key-open_"][class*="_title_btn"] button:hover p {
-            color: var(--accent) !important;
-            text-decoration: underline !important;
-        }
-        [class*="st-key-open_"][class*="_title_btn"] { margin-bottom: 0 !important; }
-
-        .rl-th { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); padding-bottom: 8px; }
-        .rl-row-hr { border: none; border-top: 1px solid var(--line); margin: 4px 0 10px 0; }
-
-        .pill-btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            padding: 6px 12px; border-radius: 7px; font-size: 13px; font-weight: 600;
-            border: 1px solid var(--line); color: var(--ink); background: #FFFFFF;
-        }
-        .pill-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
-
-        .pagination-row { display: flex; align-items: center; gap: 6px; }
-        .page-pill {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 30px; height: 30px; border-radius: 7px; font-size: 13px; font-weight: 600;
-            border: 1px solid transparent; color: var(--ink-soft);
-        }
-        .page-pill.current { border-color: var(--accent); color: var(--accent); }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+/* --- BUTTONS --- */
+.btn-outline {
+    border: 1px solid #D9642A;
+    color: #D9642A;
+    background: transparent;
+    padding: 8px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-solid {
+    border: 1px solid #D9642A;
+    background: #D9642A;
+    color: white;
+    padding: 8px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+'''
 
 # ============================================================
 # SHARED CHROME: SIDEBAR + TOP BAR
