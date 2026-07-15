@@ -10,7 +10,7 @@ from report_views import (
     render_commandes_detail_view
 )
 
-render_topbar("Production M3 13.4")
+render_topbar("Production M3 13.4", breadcrumb=["Accueil", "Liste des rapports"])
 
 st.markdown('<div class="page-title font-serif">Liste des rapports</div>', unsafe_allow_html=True)
 st.markdown(
@@ -23,6 +23,7 @@ st.markdown(
 # Maps a report key -> its tab label and the shared view function
 # that renders it (from report_views.py). Adding a new in-app
 # report tab in the future just means adding an entry here.
+# (UNCHANGED — pure UI/layout pass, no logic touched below.)
 # ============================================================
 
 REPORT_TABS = {
@@ -32,10 +33,7 @@ REPORT_TABS = {
 }
 
 # ============================================================
-# MULTI-TAB STATE
-# "Liste des rapports" is always open and always first. Any
-# number of report tabs can be open alongside it, in the order
-# they were opened, each with its own close (✖) button.
+# MULTI-TAB STATE (UNCHANGED)
 # ============================================================
 
 if "lr_active_tab" not in st.session_state:
@@ -62,7 +60,7 @@ def _close_tab(key):
 
 
 # ------------------------------------------------------------
-# TAB BAR
+# TAB BAR (UNCHANGED)
 # ------------------------------------------------------------
 
 open_tabs = st.session_state.lr_open_tabs
@@ -105,7 +103,7 @@ st.markdown('<div style="height:4px;"></div>', unsafe_allow_html=True)
 st.divider()
 
 # ============================================================
-# TAB CONTENT
+# TAB CONTENT (UNCHANGED dispatch logic)
 # ============================================================
 
 if st.session_state.lr_active_tab in REPORT_TABS:
@@ -115,50 +113,59 @@ if st.session_state.lr_active_tab in REPORT_TABS:
 else:
 
     # ========================================================
-    # "LISTE DES RAPPORTS" BODY
+    # "LISTE DES RAPPORTS" BODY — redesigned to match the
+    # target screenshots: single search/filter row, card grid
+    # instead of a table.
     # ========================================================
 
-    # ---------------- SEARCH ROW ----------------
+    # ---------------- SEARCH / FILTER ROW ----------------
 
-    search_col, btn_col, spacer_col, fav_col = st.columns([5, 1, 3, 1.4])
+    search_col, filt_col, sort_label_col, sort_col = st.columns([6, 1.3, 0.9, 1.7])
 
     with search_col:
         st.text_input(
             "Recherche",
-            placeholder="Rechercher un rapport par nom, numéro ou mot-clé...",
+            placeholder="🔍  Rechercher un rapport par nom, numéro ou mot-clé...",
             label_visibility="collapsed",
             key="report_search"
         )
 
-    with btn_col:
-        st.button("Rechercher", key="report_search_btn", type="primary", use_container_width=True)
+    with filt_col:
+        st.button("▽  Filtres", key="filters_btn", use_container_width=True)
 
-    with fav_col:
-        st.button("☆  Mes favoris", key="mes_favoris_btn", use_container_width=True)
+    with sort_label_col:
+        st.markdown('<div style="padding-top:8px; font-size:13px; color:#6E6A63;">Trier par</div>', unsafe_allow_html=True)
+
+    with sort_col:
+        st.selectbox(
+            "Trier par", ["Nom (A-Z)", "Nom (Z-A)", "Dernière modif.", "Utilisations"],
+            label_visibility="collapsed", key="sort_select"
+        )
 
     st.markdown('<div style="height:22px;"></div>', unsafe_allow_html=True)
 
     # ---------------- MOCK DATA ----------------
     # "key" links a row to an entry in REPORT_TABS above; rows with
-    # key=None are static/non-interactive mock rows.
+    # key=None are static/non-interactive mock rows. (unchanged
+    # data model — only added "maj" for the card footer date.)
 
     reports = pd.DataFrame([
         {"key": "mesures", "titre": "Mesures des Nouveaux Produits", "desc": "Suivi des mesures et performances produits",
-         "numero": 1722, "dossier": "Logistique - Infolog", "favori": False},
+         "numero": 1722, "dossier": "Logistique - Infolog", "maj": "23/05/2026", "favori": False},
         {"key": "article", "titre": "Article - Liste des Coloris / Taille", "desc": "Référentiel des coloris et tailles par article",
-         "numero": 646, "dossier": "Nouvelles requêtes - Référentiel Article", "favori": False},
+         "numero": 646, "dossier": "Nouvelles requêtes - Référentiel Article", "maj": "22/05/2026", "favori": False},
         {"key": "commandes", "titre": "Commandes - Détail", "desc": "Détail des commandes et lignes associées",
-         "numero": 667, "dossier": "Nouvelles requêtes - Gestion Commerciale", "favori": False},
+         "numero": 667, "dossier": "Nouvelles requêtes - Gestion Commerciale", "maj": "21/05/2026", "favori": False},
         {"key": None, "titre": "Stock Disponible - Dépôt Métier", "desc": "Disponibilités stock par dépôt et métier",
-         "numero": 662, "dossier": "Nouvelles requêtes - Gestion Commerciale", "favori": False},
+         "numero": 662, "dossier": "Nouvelles requêtes - Gestion Commerciale", "maj": "20/05/2026", "favori": False},
         {"key": None, "titre": "Expéditions - Détail (après Facturation)", "desc": "Détail des expéditions après facturation",
-         "numero": 669, "dossier": "Nouvelles requêtes - Gestion Commerciale", "favori": False},
+         "numero": 669, "dossier": "Nouvelles requêtes - Gestion Commerciale", "maj": "20/05/2026", "favori": False},
         {"key": None, "titre": "Commandes - Consolidation (Temps Réel)", "desc": "Consolidation temps réel des commandes",
-         "numero": 986, "dossier": "Nouvelles requêtes - Gestion Commerciale", "favori": False},
+         "numero": 986, "dossier": "Nouvelles requêtes - Gestion Commerciale", "maj": "19/05/2026", "favori": False},
         {"key": None, "titre": "Liste des Produits", "desc": "Référentiel complet des produits",
-         "numero": 644, "dossier": "Nouvelles requêtes - Référentiel Article", "favori": False},
+         "numero": 644, "dossier": "Nouvelles requêtes - Référentiel Article", "maj": "19/05/2026", "favori": False},
         {"key": None, "titre": "Factures - CA Consolidation (J-1)", "desc": "Chiffre d'affaires consolidé à J-1",
-         "numero": 671, "dossier": "Nouvelles requêtes - Gestion Financière", "favori": False},
+         "numero": 671, "dossier": "Nouvelles requêtes - Gestion Financière", "maj": "18/05/2026", "favori": False},
     ])
 
     REPERTOIRE_TREE = [
@@ -179,7 +186,7 @@ else:
         {"label": "Divers", "level": 0, "chevron": True, "state": "normal"},
     ]
 
-    # ---------------- LAYOUT: REPERTOIRES + TABLE ----------------
+    # ---------------- LAYOUT: REPERTOIRES + CARD GRID ----------------
 
     left_col, right_col = st.columns([1.15, 3.4], gap="medium")
 
@@ -232,72 +239,33 @@ else:
 
     with right_col:
 
-        count_col, filt_col, sort_label_col, sort_col, view1_col, view2_col = st.columns(
-            [3, 1.1, 0.9, 1.5, 0.55, 0.55]
-        )
+        # ---------------- CARD GRID (2 columns) ----------------
+        # Rows with a real report key (mesures/article/commandes)
+        # still open their in-app tab exactly as before — the
+        # title is a genuine st.button, just restyled to sit
+        # inside a card instead of a table row.
 
-        with count_col:
-            st.markdown(f'<div class="rl-count">{len(reports)} rapports</div>', unsafe_allow_html=True)
+        reports_list = reports.to_dict("records")
 
-        with filt_col:
-            st.button("▽  Filtres", key="filters_btn", use_container_width=True)
+        for row_start in range(0, len(reports_list), 2):
+            pair = reports_list[row_start:row_start + 2]
+            card_cols = st.columns(2, gap="medium")
 
-        with sort_label_col:
-            st.markdown('<div style="padding-top:6px; font-size:13px; color:#6E6A63;">Trier par</div>', unsafe_allow_html=True)
+            for card_col, r in zip(card_cols, pair):
+                with card_col:
+                    favori_class = "is-favori" if r["favori"] else ""
 
-        with sort_col:
-            st.selectbox(
-                "Trier par", ["Nom (A-Z)", "Nom (Z-A)", "Dernière modif.", "Utilisations"],
-                label_visibility="collapsed", key="sort_select"
-            )
+                    st.markdown(
+                        f"""
+                        <div class="rc-card">
+                            <div class="rc-card-top">
+                                <div class="rc-favori-pill {favori_class}">{ICON_STAR} Favoris</div>
+                                <div class="rc-kebab">{ICON_KEBAB}</div>
+                            </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
-        with view1_col:
-            st.markdown(
-                f'<div class="pill-btn active" style="padding:8px 10px;">{ICON_LIST_VIEW}</div>',
-                unsafe_allow_html=True
-            )
-
-        with view2_col:
-            st.markdown(
-                f'<div class="pill-btn" style="padding:8px 10px;">{ICON_GRID_VIEW}</div>',
-                unsafe_allow_html=True
-            )
-
-        st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
-
-        # ---------------- TABLE HEADER ----------------
-
-        th1, th2, th3, th4, th5 = st.columns([3, 0.6, 1.6, 0.25, 0.2])
-        with th1:
-            st.markdown('<div class="rl-th">Rapport</div>', unsafe_allow_html=True)
-        with th2:
-            st.markdown('<div class="rl-th">Numéro</div>', unsafe_allow_html=True)
-        with th3:
-            st.markdown('<div class="rl-th">Dossier</div>', unsafe_allow_html=True)
-        with th4:
-            st.markdown('<div class="rl-th"></div>', unsafe_allow_html=True)
-        with th5:
-            st.markdown('<div class="rl-th"></div>', unsafe_allow_html=True)
-
-        st.markdown('<hr class="rl-row-hr">', unsafe_allow_html=True)
-
-        # ---------------- TABLE ROWS ----------------
-        # Every row uses real st.columns (not raw HTML) so the
-        # title can be a genuine, natively-laid-out st.button for
-        # the 3 rows that link to a report, with zero overlay
-        # hacks. Non-linked rows render identical markup, just
-        # without the click behavior, styled the same way so the
-        # table reads as one consistent list.
-
-        for _, r in reports.iterrows():
-
-            rc1, rc2, rc3, rc4, rc5 = st.columns([3, 0.6, 1.6, 0.25, 0.2])
-
-            with rc1:
-                icon_col, text_col = st.columns([0.13, 0.87])
-                with icon_col:
-                    st.markdown(f'<div class="rl-report-icon">{ICON_DOC}</div>', unsafe_allow_html=True)
-                with text_col:
                     if pd.notna(r["key"]):
                         st.button(
                             r["titre"],
@@ -306,25 +274,24 @@ else:
                             args=(r["key"],),
                         )
                     else:
-                        st.markdown(f'<div class="rl-title-link">{r["titre"]}</div>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="rl-report-desc">{r["desc"]}</div>', unsafe_allow_html=True)
+                        st.markdown(
+                            f'<div class="rc-card-title">{r["titre"]}</div>',
+                            unsafe_allow_html=True,
+                        )
 
-            with rc2:
-                st.markdown(f'<div class="rl-cell" style="padding-top:8px;">{r["numero"]}</div>', unsafe_allow_html=True)
+                    st.markdown(
+                        f"""
+                            <div class="rc-card-meta">N° {r['numero']} · {r['dossier']}</div>
+                            <div class="rc-card-footer">
+                                <span>Dernière modif.</span>
+                                <span>{r['maj']}</span>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
-            with rc3:
-                st.markdown(f'<div class="rl-cell" style="padding-top:8px;">{r["dossier"]}</div>', unsafe_allow_html=True)
-
-            with rc4:
-                star_class = "filled" if r["favori"] else ""
-                st.markdown(f'<div class="rl-star {star_class}" style="padding-top:8px;">{ICON_STAR}</div>', unsafe_allow_html=True)
-
-            with rc5:
-                st.markdown(f'<div class="rl-kebab" style="padding-top:8px;">{ICON_KEBAB}</div>', unsafe_allow_html=True)
-
-            st.markdown('<hr class="rl-row-hr">', unsafe_allow_html=True)
-
-        st.markdown('<div style="height:6px;"></div>', unsafe_allow_html=True)
+            st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
 
         # ---------------- FOOTER: PAGE SIZE + PAGINATION ----------------
 

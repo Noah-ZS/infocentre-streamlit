@@ -68,34 +68,33 @@ def inject_global_css():
             --success: #1E8A5F;
         }
 
-        /* ---------------- STREAMLIT CHROME RESET (FIXES TOP DEAD SPACE) ---------------- */
+        /* ---------------- STREAMLIT CHROME CLEANUP ---------------- */
+        /* IMPORTANT: header must be SHRUNK, not display:none — the
+           sidebar collapse/expand arrow lives inside this header
+           element, and display:none removes it (and everything
+           inside it) from the page entirely, with no way to bring
+           the sidebar back. Keep it present but minimal instead. */
         #MainMenu, footer { visibility: hidden; height: 0; }
         div[data-testid="stDecoration"] { display: none; }
         div[data-testid="stToolbar"] { visibility: hidden; }
-        
-        /* Force clear hidden headers that take up blank vertical viewport room */
         header[data-testid="stHeader"] {
-            display: none !important;
-            height: 0px !important;
-            min-height: 0px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            height: 2.4rem !important;
+            min-height: 2.4rem !important;
         }
-        
-        .stApp { background: #FFFFFF; padding-top: 0 !important; }
+
+        .stApp { background: #FFFFFF; }
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; color: var(--ink); }
         .font-serif { font-family: 'Fraunces', serif; }
 
-        section.main {
-            padding-top: 0 !important;
-        }
-        
-        /* Strict adjustments to move top bars, layout titles, and metrics beautifully upward */
         section.main .block-container {
             max-width: 1320px;
             margin: 0 auto;
-            padding: 1rem 3rem 4rem 3rem !important; /* Brought padding-top to 1rem to perfectly align main page with sidebar top */
+            padding: 1.5rem 3rem 4rem 3rem;
         }
 
-        /* ---------------- SIDEBAR POLISHING ---------------- */
+        /* ---------------- SIDEBAR ---------------- */
 
         section[data-testid="stSidebar"] {
             background: var(--cream);
@@ -103,22 +102,19 @@ def inject_global_css():
             min-width: 272px;
             max-width: 272px;
         }
-        section[data-testid="stSidebar"] > div:first-child { 
-            padding: 1.5rem 1.3rem !important; /* Snug top-padding grid alignment */
-        }
+        section[data-testid="stSidebar"] > div { padding: 1.6rem 1.3rem; }
 
         .brand-word {
             font-family: 'Fraunces', serif;
             font-size: 28px; font-weight: 600; color: var(--ink);
-            line-height: 1.1; margin: 0px 0 2px 0;
+            line-height: 1.1; margin: 4px 0 2px 0;
         }
         .brand-sub {
-            font-family: 'Inter', sans-serif;
             font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
             color: var(--accent); margin-bottom: 22px;
         }
 
-        /* Custom alignment for native st.page_link anchors */
+        /* Style native st.page_link anchors to look like our nav items */
         section[data-testid="stSidebar"] a[data-testid^="stPageLink"] {
             display: flex; align-items: center; gap: 10px;
             padding: 9px 12px !important; border-radius: 8px;
@@ -141,15 +137,17 @@ def inject_global_css():
         .logout-row {
             display: flex; align-items: center; gap: 10px;
             color: #57534A; font-size: 14px; font-weight: 500; margin-top: 16px;
-            font-family: 'Inter', sans-serif;
         }
 
-        /* ---------------- MAIN TOP BAR ---------------- */
+        /* ---------------- TOP BAR (breadcrumb left, version+avatar right) ---------------- */
 
-        .topbar {
-            display: flex; align-items: center; justify-content: flex-end;
-            gap: 14px; color: var(--ink-soft); font-size: 13.5px; margin: 0 0 12px 0;
-            padding-top: 0;
+        .topbar-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin: 0 0 22px 0; min-height: 20px;
+        }
+        .topbar-right {
+            display: flex; align-items: center; gap: 14px;
+            color: var(--ink-soft); font-size: 13.5px;
         }
         .avatar {
             width: 34px; height: 34px; border-radius: 50%;
@@ -157,21 +155,33 @@ def inject_global_css():
             display: flex; align-items: center; justify-content: center;
             font-size: 12.5px; font-weight: 600;
         }
+        .breadcrumb { font-size: 13.5px; }
+        .breadcrumb .crumb-link { color: var(--accent); font-weight: 500; }
+        .breadcrumb .crumb-current { color: var(--ink); font-weight: 600; }
+        .breadcrumb .breadcrumb-sep { color: var(--ink-soft); margin: 0 7px; }
 
-        .page-title { 
-            font-family: 'Fraunces', serif; 
-            font-size: 38px; 
-            font-weight: 600; 
-            color: var(--ink); 
-            margin: 0 0 4px 0; 
-            line-height: 1.15;
+        .page-title { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+        .page-subtitle { color: var(--ink-soft); font-size: 15px; margin-bottom: 30px; }
+
+        /* ---------------- HERO BANNER (accueil) ---------------- */
+
+        .hero-banner {
+            background: linear-gradient(135deg, #F4F0E8 0%, #ECE5D6 100%);
+            border-radius: 18px;
+            padding: 36px 40px 58px 40px;
+            margin-bottom: -34px; /* lets the KPI row overlap the bottom edge */
         }
-        .page-subtitle { color: var(--ink-soft); font-size: 15px; margin: 0 0 20px 0; }
+        .hero-banner .page-title { margin-bottom: 8px; }
+        .hero-banner .page-subtitle { margin-bottom: 0; }
 
         /* ---------------- KPI CARDS (accueil) ---------------- */
 
-        .kpi-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 20px 22px; height: 100%; }
-        .kpi-icon { width: 42px; height: 42px; border-radius: 10px; background: #FFFFFF; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--accent); margin-bottom: 14px; }
+        .kpi-card {
+            background: #FFFFFF; border: 1px solid var(--line); border-radius: 14px;
+            padding: 22px 22px 20px 22px; height: 100%;
+            box-shadow: 0 6px 18px rgba(28,27,25,0.07);
+        }
+        .kpi-icon { width: 42px; height: 42px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--accent); margin-bottom: 14px; }
         .kpi-label { font-size: 13.5px; color: var(--ink-soft); margin-bottom: 6px; }
         .kpi-value { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
         .kpi-delta { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--success); font-weight: 500; }
@@ -193,7 +203,7 @@ def inject_global_css():
         .list-kebab { margin-left: auto; color: #B4AFA6; }
         .panel-footer { display: flex; align-items: center; gap: 4px; color: var(--accent); font-size: 13.5px; font-weight: 600; padding: 14px 2px 4px 2px; }
 
-        /* ---------------- LISTE DES RAPPORTS ---------------- */
+        /* ---------------- LISTE DES RAPPORTS: RÉPERTOIRES ---------------- */
 
         .repertoire-panel { background: #FFFFFF; border: 1px solid var(--line); border-radius: 14px; padding: 18px 16px; }
         .repertoire-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; margin-bottom: 12px; }
@@ -207,32 +217,26 @@ def inject_global_css():
         .tree-indent-1 { padding-left: 22px; }
         .tree-footer { display: flex; align-items: center; gap: 8px; color: #57534A; font-size: 13px; font-weight: 500; padding: 12px 4px 2px 4px; margin-top: 8px; border-top: 1px solid var(--line); }
 
-        .rl-count { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; color: var(--ink); }
+        /* ---------------- LISTE DES RAPPORTS: CARD GRID ---------------- */
 
-        .rl-table-header {
-            display: grid;
-            grid-template-columns: minmax(260px,3fr) 90px minmax(220px,2fr) 34px 26px;
-            gap: 10px; padding: 0 4px 10px 4px; border-bottom: 1px solid var(--line);
-            font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
+        .rc-card {
+            background: #FFFFFF; border: 1px solid var(--line); border-radius: 14px;
+            padding: 18px 18px 14px 18px; height: 100%;
         }
-        .rl-row {
-            display: grid;
-            grid-template-columns: minmax(260px,3fr) 90px minmax(220px,2fr) 34px 26px;
-            gap: 10px; padding: 14px 4px; border-bottom: 1px solid var(--line);
-            align-items: center; min-height: 62px;
+        .rc-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .rc-favori-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+            border: 1px solid var(--line); color: var(--ink-soft);
         }
-        .rl-row:last-child { border-bottom: none; }
-        .rl-report-cell { display: flex; align-items: flex-start; gap: 11px; }
-        .rl-report-icon { width: 30px; height: 30px; border-radius: 7px; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: #8A857B; flex-shrink: 0; margin-top: 1px; }
-        .rl-report-title { font-size: 14.5px; font-weight: 600; color: var(--ink); }
-        .rl-report-desc { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
-        .rl-cell { font-size: 13.5px; color: #4A4640; }
-        .rl-star { color: #C9C4B8; }
-        .rl-star.filled { color: var(--accent); }
-        .rl-kebab { color: #B4AFA6; }
-
-        .rl-title-link {
-            font-size: 14.5px; font-weight: 600; color: var(--ink);
+        .rc-favori-pill.is-favori { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-bg); }
+        .rc-kebab { color: #B4AFA6; }
+        .rc-card-title { font-family: 'Fraunces', serif; font-size: 16.5px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+        .rc-card-meta { font-size: 13px; color: #4A4640; margin-bottom: 2px; }
+        .rc-card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line);
+            font-size: 12.5px; color: var(--ink-soft);
         }
 
         [class*="st-key-open_"][class*="_title_btn"] button {
@@ -246,7 +250,8 @@ def inject_global_css():
             justify-content: flex-start !important;
         }
         [class*="st-key-open_"][class*="_title_btn"] button p {
-            font-size: 14.5px !important;
+            font-family: 'Fraunces', serif !important;
+            font-size: 16.5px !important;
             font-weight: 600 !important;
             color: var(--ink) !important;
         }
@@ -254,10 +259,7 @@ def inject_global_css():
             color: var(--accent) !important;
             text-decoration: underline !important;
         }
-        [class*="st-key-open_"][class*="_title_btn"] { margin-bottom: 0 !important; }
-
-        .rl-th { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); padding-bottom: 8px; }
-        .rl-row-hr { border: none; border-top: 1px solid var(--line); margin: 4px 0 10px 0; }
+        [class*="st-key-open_"][class*="_title_btn"] { margin-bottom: 8px !important; }
 
         .pill-btn {
             display: inline-flex; align-items: center; justify-content: center;
@@ -285,44 +287,58 @@ def inject_global_css():
 def render_sidebar(nav_items):
     """nav_items: list of dicts {"page": st.Page, "label": str, "icon": str}"""
     with st.sidebar:
-        # Group Branding tightly at the top container
-        with st.container():
-            try:
-                st.image("image.png", width=170)
-            except Exception:
-                st.markdown('<div class="brand-word">Infocentre</div>', unsafe_allow_html=True)
+        try:
+            st.image("image.png", width=170)
+        except Exception:
+            st.markdown('<div class="brand-word">Infocentre</div>', unsafe_allow_html=True)
 
-            st.markdown('<div class="brand-sub">HERMÈS PARIS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="brand-sub">HERMÈS PARIS</div>', unsafe_allow_html=True)
 
-        # Render Premium Navigation Links
         for item in nav_items:
             st.page_link(item["page"], label=item["label"], icon=item["icon"])
 
-        # Soft, clean visual layout separator
-        st.divider()
+        st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 
-        # Group Language Selector and Logout action cleanly at bottom
-        with st.container():
-            st.selectbox(
-                "Langue",
-                ["🌐 Français", "🌐 English"],
-                label_visibility="collapsed",
-                key="lang_select"
-            )
+        st.selectbox(
+            "Langue",
+            ["🌐 Français", "🌐 English"],
+            label_visibility="collapsed",
+            key="lang_select"
+        )
 
-            st.markdown(
-                f'<div class="logout-row">{ICON_LOGOUT}<span>Déconnexion</span></div>',
-                unsafe_allow_html=True,
-            )
+        st.markdown(
+            f'<div class="logout-row">{ICON_LOGOUT}<span>Déconnexion</span></div>',
+            unsafe_allow_html=True,
+        )
 
 
-def render_topbar(version_label):
+def render_topbar(version_label, breadcrumb=None):
+    """version_label: e.g. 'Version Production 5.2.1'.
+    breadcrumb: optional list of strings, e.g. ['Accueil', 'Liste des rapports'].
+    When given, renders as a breadcrumb trail on the left (all but the
+    last crumb in accent color, last one bold ink) with the version +
+    avatar block on the right, on the same row."""
+
+    if breadcrumb:
+        crumbs_html = ""
+        for i, crumb in enumerate(breadcrumb):
+            if i > 0:
+                crumbs_html += '<span class="breadcrumb-sep">/</span>'
+            css_class = "crumb-current" if i == len(breadcrumb) - 1 else "crumb-link"
+            crumbs_html += f'<span class="{css_class}">{crumb}</span>'
+        left_html = f'<div class="breadcrumb">{crumbs_html}</div>'
+    else:
+        left_html = '<div></div>'
+
     st.markdown(
         f"""
-        <div class="topbar">
-            <span>{version_label}</span>
-            <div class="avatar">NJ</div>
-            {ICON_CHEVRON_DOWN}
+        <div class="topbar-row">
+            {left_html}
+            <div class="topbar-right">
+                <span>{version_label}</span>
+                <div class="avatar">NJ</div>
+                {ICON_CHEVRON_DOWN}
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -331,12 +347,12 @@ def render_topbar(version_label):
 
 def render_placeholder_page(title, version_label="Version Production 5.2.1"):
     """Generic stub for sidebar sections that don't have a real page yet."""
-    render_topbar(version_label)
+    render_topbar(version_label, breadcrumb=["Accueil", title])
     st.markdown(f'<div class="page-title font-serif">{title}</div>', unsafe_allow_html=True)
     st.info("🚧 Cette section n'a pas encore été implémentée.")
 
 # ============================================================
-# SNOWFLAKE DATA (shared by pages that need the TABLES)
+# SNOWFLAKE DATA (shared by pages that need the ARTICLES table)
 # ============================================================
 
 @st.cache_data(ttl=300)
@@ -380,6 +396,12 @@ def load_commandes_detail():
 # ============================================================
 # EMAIL SENDING (Gmail SMTP)
 # ============================================================
+# Requires a Google App Password in .streamlit/secrets.toml as a
+# ROOT-LEVEL key (i.e. above any [section] header):
+#
+#   smtp_password = "xxxx xxxx xxxx xxxx"
+#
+# Generate one at: https://myaccount.google.com/apppasswords
 
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587

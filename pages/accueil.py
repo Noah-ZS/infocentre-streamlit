@@ -7,8 +7,21 @@ from common import (
 
 render_topbar("Version Production 5.2.1")
 
-st.markdown('<div class="page-title font-serif">Bienvenue sur votre Infocentre</div>', unsafe_allow_html=True)
-st.markdown('<div class="page-subtitle">Votre portail de Business Intelligence dédié à la performance.</div>', unsafe_allow_html=True)
+# ============================================================
+# HERO BANNER
+# (soft gradient background; margin-bottom is negative so the
+# KPI row below visually overlaps its bottom edge)
+# ============================================================
+
+st.markdown(
+    """
+    <div class="hero-banner">
+        <div class="page-title font-serif">Bienvenue sur votre Infocentre</div>
+        <div class="page-subtitle">Votre portail de Business Intelligence dédié à la performance.</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ============================================================
 # MOCK DATA
@@ -37,7 +50,7 @@ kpis = [
 ]
 
 # ============================================================
-# KPI CARDS
+# KPI CARDS (overlapping the hero's bottom edge)
 # ============================================================
 
 kpi_cols = st.columns(3, gap="medium")
@@ -57,7 +70,7 @@ for col, kpi in zip(kpi_cols, kpis):
             unsafe_allow_html=True,
         )
 
-st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+st.markdown('<div style="height:34px;"></div>', unsafe_allow_html=True)
 
 # ============================================================
 # TWO-COLUMN LIST PANELS
