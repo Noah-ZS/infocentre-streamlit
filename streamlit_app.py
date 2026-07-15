@@ -10,8 +10,36 @@ shared custom sidebar, then hands off to whichever page is active.
 import streamlit as st
 from common import inject_global_css, render_sidebar
 
+# 1. Page Config
 st.set_page_config(page_title="Infocentre", layout="wide")
+
+# 2. Inject your global tokens
 inject_global_css()
+
+# 3. BULLETPROOF TOP-SPACE REMOVER (For Streamlit 1.36+)
+# We place this here so it is guaranteed to inject on every single page switch.
+st.markdown("""
+    <style>
+    /* Target all known Streamlit main wrappers for modern versions */
+    .block-container, 
+    [data-testid="stMainBlockContainer"], 
+    [data-testid="stAppViewBlockContainer"] {
+        padding-top: 1.5rem !important; /* Pulls content to the very top */
+        padding-bottom: 2rem !important;
+        margin-top: 0 !important;
+    }
+    
+    /* Completely nuke the native header block */
+    header, 
+    [data-testid="stHeader"], 
+    .stAppHeader {
+        display: none !important;
+        height: 0px !important;
+        min-height: 0px !important;
+        visibility: hidden !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # ------------------------------------------------------------
 # PAGES

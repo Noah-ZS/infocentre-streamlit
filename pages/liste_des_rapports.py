@@ -1,16 +1,15 @@
 import streamlit as st
 import pandas as pd
 from common import (
-    render_topbar, ICON_DOC, ICON_STAR, ICON_SEARCH, ICON_FOLDER,
-    ICON_FILTER, ICON_CHEVRON_DOWN, ICON_CHEVRON_RIGHT, ICON_INFO,
-    ICON_LIST_VIEW, ICON_GRID_VIEW, ICON_SETTINGS, ICON_KEBAB
+    render_topbar, ICON_STAR, ICON_FOLDER,
+    ICON_CHEVRON_DOWN, ICON_CHEVRON_RIGHT, ICON_SETTINGS, ICON_KEBAB
 )
 from report_views import (
     render_article_coloris_view, render_mesures_produits_view,
     render_commandes_detail_view
 )
 
-render_topbar("Production M3 13.4", breadcrumb=["Accueil", "Liste des rapports"])
+render_topbar("Production M3 13.4", breadcrumb="Liste des rapports")
 
 st.markdown('<div class="page-title font-serif">Liste des rapports</div>', unsafe_allow_html=True)
 st.markdown(
@@ -23,7 +22,6 @@ st.markdown(
 # Maps a report key -> its tab label and the shared view function
 # that renders it (from report_views.py). Adding a new in-app
 # report tab in the future just means adding an entry here.
-# (UNCHANGED — pure UI/layout pass, no logic touched below.)
 # ============================================================
 
 REPORT_TABS = {
@@ -33,7 +31,10 @@ REPORT_TABS = {
 }
 
 # ============================================================
-# MULTI-TAB STATE (UNCHANGED)
+# MULTI-TAB STATE
+# "Liste des rapports" is always open and always first. Any
+# number of report tabs can be open alongside it, in the order
+# they were opened, each with its own close (✖) button.
 # ============================================================
 
 if "lr_active_tab" not in st.session_state:
@@ -60,8 +61,10 @@ def _close_tab(key):
 
 
 # ------------------------------------------------------------
-# TAB BAR (UNCHANGED)
+# TAB BAR
 # ------------------------------------------------------------
+
+st.markdown('<div class="tab-bar-wrap">', unsafe_allow_html=True)
 
 open_tabs = st.session_state.lr_open_tabs
 n_open = len(open_tabs)
@@ -99,11 +102,10 @@ for i, key in enumerate(open_tabs):
                 use_container_width=True,
             )
 
-st.markdown('<div style="height:4px;"></div>', unsafe_allow_html=True)
-st.divider()
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================================
-# TAB CONTENT (UNCHANGED dispatch logic)
+# TAB CONTENT
 # ============================================================
 
 if st.session_state.lr_active_tab in REPORT_TABS:
@@ -113,19 +115,17 @@ if st.session_state.lr_active_tab in REPORT_TABS:
 else:
 
     # ========================================================
-    # "LISTE DES RAPPORTS" BODY — redesigned to match the
-    # target screenshots: single search/filter row, card grid
-    # instead of a table.
+    # "LISTE DES RAPPORTS" BODY
     # ========================================================
 
-    # ---------------- SEARCH / FILTER ROW ----------------
+    # ---------------- SEARCH ROW ----------------
 
-    search_col, filt_col, sort_label_col, sort_col = st.columns([6, 1.3, 0.9, 1.7])
+    search_col, filt_col, sort_label_col, sort_col = st.columns([5, 1.3, 0.9, 1.6])
 
     with search_col:
         st.text_input(
             "Recherche",
-            placeholder="🔍  Rechercher un rapport par nom, numéro ou mot-clé...",
+            placeholder="Rechercher un rapport par nom, numéro ou mot-clé...",
             label_visibility="collapsed",
             key="report_search"
         )
@@ -146,26 +146,25 @@ else:
 
     # ---------------- MOCK DATA ----------------
     # "key" links a row to an entry in REPORT_TABS above; rows with
-    # key=None are static/non-interactive mock rows. (unchanged
-    # data model — only added "maj" for the card footer date.)
+    # key=None are static/non-interactive mock rows.
 
     reports = pd.DataFrame([
         {"key": "mesures", "titre": "Mesures des Nouveaux Produits", "desc": "Suivi des mesures et performances produits",
-         "numero": 1722, "dossier": "Logistique - Infolog", "maj": "23/05/2026", "favori": False},
+         "numero": 1722, "dossier": "Logistique - Infolog", "favori": True, "date": "26/03/2024"},
         {"key": "article", "titre": "Article - Liste des Coloris / Taille", "desc": "Référentiel des coloris et tailles par article",
-         "numero": 646, "dossier": "Nouvelles requêtes - Référentiel Article", "maj": "22/05/2026", "favori": False},
+         "numero": 646, "dossier": "Nouvelles requêtes - Référentiel Article", "favori": True, "date": "26/03/2024"},
         {"key": "commandes", "titre": "Commandes - Détail", "desc": "Détail des commandes et lignes associées",
-         "numero": 667, "dossier": "Nouvelles requêtes - Gestion Commerciale", "maj": "21/05/2026", "favori": False},
+         "numero": 667, "dossier": "Nouvelles requêtes - Gestion Commerciale", "favori": True, "date": "26/03/2024"},
         {"key": None, "titre": "Stock Disponible - Dépôt Métier", "desc": "Disponibilités stock par dépôt et métier",
-         "numero": 662, "dossier": "Nouvelles requêtes - Gestion Commerciale", "maj": "20/05/2026", "favori": False},
+         "numero": 662, "dossier": "Nouvelles requêtes - Gestion Commerciale", "favori": False, "date": "22/03/2024"},
         {"key": None, "titre": "Expéditions - Détail (après Facturation)", "desc": "Détail des expéditions après facturation",
-         "numero": 669, "dossier": "Nouvelles requêtes - Gestion Commerciale", "maj": "20/05/2026", "favori": False},
+         "numero": 669, "dossier": "Nouvelles requêtes - Gestion Commerciale", "favori": False, "date": "20/03/2024"},
         {"key": None, "titre": "Commandes - Consolidation (Temps Réel)", "desc": "Consolidation temps réel des commandes",
-         "numero": 986, "dossier": "Nouvelles requêtes - Gestion Commerciale", "maj": "19/05/2026", "favori": False},
+         "numero": 986, "dossier": "Nouvelles requêtes - Gestion Commerciale", "favori": False, "date": "18/03/2024"},
         {"key": None, "titre": "Liste des Produits", "desc": "Référentiel complet des produits",
-         "numero": 644, "dossier": "Nouvelles requêtes - Référentiel Article", "maj": "19/05/2026", "favori": False},
+         "numero": 644, "dossier": "Nouvelles requêtes - Référentiel Article", "favori": False, "date": "15/03/2024"},
         {"key": None, "titre": "Factures - CA Consolidation (J-1)", "desc": "Chiffre d'affaires consolidé à J-1",
-         "numero": 671, "dossier": "Nouvelles requêtes - Gestion Financière", "maj": "18/05/2026", "favori": False},
+         "numero": 671, "dossier": "Nouvelles requêtes - Gestion Financière", "favori": False, "date": "12/03/2024"},
     ])
 
     REPERTOIRE_TREE = [
@@ -186,7 +185,7 @@ else:
         {"label": "Divers", "level": 0, "chevron": True, "state": "normal"},
     ]
 
-    # ---------------- LAYOUT: REPERTOIRES + CARD GRID ----------------
+    # ---------------- LAYOUT: REPERTOIRES + TABLE ----------------
 
     left_col, right_col = st.columns([1.15, 3.4], gap="medium")
 
@@ -239,30 +238,29 @@ else:
 
     with right_col:
 
-        # ---------------- CARD GRID (2 columns) ----------------
-        # Rows with a real report key (mesures/article/commandes)
-        # still open their in-app tab exactly as before — the
-        # title is a genuine st.button, just restyled to sit
-        # inside a card instead of a table row.
+        # ---------------- REPORT CARD GRID ----------------
+        # 2 cards per row, in the same order as the `reports` data.
+        # The 3 rows wired to REPORT_TABS render a real st.button as
+        # the title (opens the report as a tab); the rest render
+        # identical markup without the click behavior.
 
-        reports_list = reports.to_dict("records")
+        report_rows = reports.to_dict("records")
 
-        for row_start in range(0, len(reports_list), 2):
-            pair = reports_list[row_start:row_start + 2]
+        for i in range(0, len(report_rows), 2):
+            pair = report_rows[i:i + 2]
             card_cols = st.columns(2, gap="medium")
 
-            for card_col, r in zip(card_cols, pair):
-                with card_col:
-                    favori_class = "is-favori" if r["favori"] else ""
+            for col, r in zip(card_cols, pair):
+                with col:
+                    st.markdown('<div class="report-card">', unsafe_allow_html=True)
 
+                    badge_html = (
+                        f'<span class="report-badge">{ICON_STAR}Favoris</span>'
+                        if r["favori"] else '<span></span>'
+                    )
                     st.markdown(
-                        f"""
-                        <div class="rc-card">
-                            <div class="rc-card-top">
-                                <div class="rc-favori-pill {favori_class}">{ICON_STAR} Favoris</div>
-                                <div class="rc-kebab">{ICON_KEBAB}</div>
-                            </div>
-                        """,
+                        f'<div class="report-card-top">{badge_html}'
+                        f'<span class="report-card-kebab">{ICON_KEBAB}</span></div>',
                         unsafe_allow_html=True,
                     )
 
@@ -274,22 +272,19 @@ else:
                             args=(r["key"],),
                         )
                     else:
-                        st.markdown(
-                            f'<div class="rc-card-title">{r["titre"]}</div>',
-                            unsafe_allow_html=True,
-                        )
+                        st.markdown(f'<div class="rl-title-link">{r["titre"]}</div>', unsafe_allow_html=True)
+
+                    st.markdown(f'<div class="report-card-number">{r["numero"]}</div>', unsafe_allow_html=True)
 
                     st.markdown(
-                        f"""
-                            <div class="rc-card-meta">N° {r['numero']} · {r['dossier']}</div>
-                            <div class="rc-card-footer">
-                                <span>Dernière modif.</span>
-                                <span>{r['maj']}</span>
-                            </div>
-                        </div>
-                        """,
+                        f'<div class="report-card-folder-row">'
+                        f'<span class="report-card-folder">{r["dossier"]}</span>'
+                        f'<span class="report-card-date">{r["date"]}</span>'
+                        f'</div>',
                         unsafe_allow_html=True,
                     )
+
+                    st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
 

@@ -215,7 +215,7 @@ def render_article_coloris_view():
 
     b1, b2, b3, b4 = st.columns(4)
     with b1:
-        st.button("Afficher", on_click=reveal_table, key="art_afficher_btn")
+        st.button("Afficher", on_click=reveal_table, key="art_afficher_btn", type="primary")
     with b2:
         st.button("Réinitialiser", on_click=reset_filters, key="art_reinit_btn")
     with b3:
@@ -336,7 +336,7 @@ def render_mesures_produits_view():
 
     b1, b2, b3 = st.columns(3)
     with b1:
-        st.button("Afficher", on_click=reveal_table, key="mes_afficher_btn")
+        st.button("Afficher", on_click=reveal_table, key="mes_afficher_btn", type="primary")
     with b2:
         st.button("Réinitialiser", on_click=reset_filters, key="mes_reinit_btn")
     with b3:
@@ -446,7 +446,7 @@ def render_commandes_detail_view():
 
     b1, b2, b3 = st.columns(3)
     with b1:
-        st.button("Afficher", on_click=reveal_table, key="cmd_afficher_btn")
+        st.button("Afficher", on_click=reveal_table, key="cmd_afficher_btn", type="primary")
     with b2:
         st.button("Réinitialiser", on_click=reset_filters, key="cmd_reinit_btn")
     with b3:
