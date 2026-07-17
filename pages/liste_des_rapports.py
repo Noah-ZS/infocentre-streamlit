@@ -137,70 +137,55 @@ def _toggle_favorite(numero):
 
 # ------------------------------------------------------------
 # TAB BAR
-# Column widths are estimated from each label's character count
-# (Streamlit columns can't auto-size to content), so short and
-# long tab labels sit close to their own text instead of being
-# stretched into equal-width boxes. A trailing spacer column
-# soaks up the remaining row width so tabs stay left-packed.
+# Streamlit columns can't natively size to their content — they
+# only take a relative ratio of the row's total width. Rather
+# than estimate pixel widths from character counts (fragile: it
+# depends on the actual rendered font/padding, which a Python
+# formula can't know), the tab row is wrapped in a keyed
+# container and every column inside it is forced via CSS to
+# hug its own content (flex: 0 0 auto) — letting the browser do
+# the actual text measurement — except the trailing spacer
+# column, which keeps growing to push all tabs to the left.
 # ------------------------------------------------------------
-
-
-def _tab_label_width(label):
-    return 0.9 + len(label) * 0.085
-
-
-CLOSE_BTN_WIDTH = 0.55
-
-
-def _tab_col_width(label, closable):
-    width = _tab_label_width(label)
-    if closable:
-        width += CLOSE_BTN_WIDTH
-    return width
-
 
 open_tabs = st.session_state.lr_open_tabs
 
-tab_widths = [_tab_col_width("Liste des rapports", closable=False)]
-for key in open_tabs:
-    tab_widths.append(_tab_col_width(REPORT_TABS[key]["label"], closable=True))
-tab_widths.append(max(14.0 - sum(tab_widths), 0.5))  # trailing spacer
+with st.container(key="tab_bar_row"):
+    # Initial ratios barely matter — the CSS above overrides every
+    # column to auto-size to its content regardless of what's passed
+    # here, aside from the trailing spacer column.
+    tab_cols = st.columns([1] * (len(open_tabs) + 1) + [6])
 
-tab_cols = st.columns(tab_widths)
+    with tab_cols[0]:
+        st.button(
+            "Liste des rapports",
+            key="tab_liste_btn",
+            type="primary" if st.session_state.lr_active_tab == "liste" else "secondary",
+            on_click=_activate_tab,
+            args=("liste",),
+        )
 
-with tab_cols[0]:
-    st.button(
-        "Liste des rapports",
-        key="tab_liste_btn",
-        type="primary" if st.session_state.lr_active_tab == "liste" else "secondary",
-        on_click=_activate_tab,
-        args=("liste",),
-    )
-
-for i, key in enumerate(open_tabs):
-    with tab_cols[i + 1]:
-        label = REPORT_TABS[key]["label"]
-        # Inner split now scales with THIS label's own length — a flat
-        # [6, 1] ratio was leaving huge dead space after short labels
-        # inside a column sized for the longest one, pushing × far right.
-        label_col, close_col = st.columns([_tab_label_width(label), CLOSE_BTN_WIDTH])
-        with label_col:
-            st.button(
-                label,
-                key=f"tab_{key}_btn",
-                type="primary" if st.session_state.lr_active_tab == key else "secondary",
-                on_click=_activate_tab,
-                args=(key,),
-            )
-        with close_col:
-            st.button(
-                "✖",
-                key=f"tab_{key}_close_btn",
-                on_click=_close_tab,
-                args=(key,),
-            )
+    for i, key in enumerate(open_tabs):
+        with tab_cols[i + 1]:
+            label_col, close_col = st.columns([5, 1])
+            with label_col:
+                st.button(
+                    REPORT_TABS[key]["label"],
+                    key=f"tab_{key}_btn",
+                    type="primary" if st.session_state.lr_active_tab == key else "secondary",
+                    on_click=_activate_tab,
+                    args=(key,),
+                )
+            with close_col:
+                st.button(
+                    "✖",
+                    key=f"tab_{key}_close_btn",
+                    on_click=_close_tab,
+                    args=(key,),
+                )
 
 st.divider()
+
 
 # ============================================================
 # TAB CONTENT (UNCHANGED dispatch logic)
