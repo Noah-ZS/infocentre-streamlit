@@ -72,6 +72,31 @@ st.markdown(
     }
     .list-row-v2:last-child { border-bottom: none; }
     .list-row-v2:hover { background: var(--card); transform: translateX(3px); }
+
+    /* ---------------- FAVORITES PANEL (interactive) ---------------- */
+    /* The panel is a real st.container(border=True, key="favoris_panel")
+       so the remove button below can live inside it — a hand-written
+       <div>...</div> spanning multiple st.markdown() calls would NOT
+       actually wrap Streamlit widgets placed between them (they render
+       as siblings, not children). */
+    .st-key-favoris_panel [data-testid="stHorizontalBlock"] {
+        align-items: center;
+    }
+    /* The ✖ remove button — stripped of button chrome so it reads as
+       a plain, subtle icon; reddens on hover to signal removal. */
+    [class*="st-key-remove_fav_"] button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #B4AFA6 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        font-size: 13px !important;
+    }
+    [class*="st-key-remove_fav_"] button:hover {
+        color: #E0473B !important;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -126,6 +151,15 @@ kpis = [
     {"icon": "⚠️", "label": "Rapports en erreur", "value": "3",
      "trend_text": "▲ +2", "trend_class": "negative", "accent": "accent-red"},
 ]
+
+
+def _remove_favorite(numero):
+    """Removes a report from the shared favorites set (same
+    st.session_state.favorites used by Liste des rapports), so
+    unfavoriting here is instantly reflected there too."""
+    favorites = get_favorites()
+    favorites.discard(numero)
+    st.rerun()
 
 # ============================================================
 # KPI CARDS
@@ -185,35 +219,49 @@ with left_col:
     )
 
 with right_col:
-    if favorite_reports.empty:
-        rows_html = (
-            '<div style="padding:18px 4px; color:var(--ink-soft); font-size:13.5px;">'
-            'Aucun rapport favori pour le moment. Cliquez sur ☆ dans '
-            '<b>Liste des rapports</b> pour en ajouter.</div>'
-        )
-    else:
-        rows_html = ""
-        for _, r in favorite_reports.iterrows():
-            rows_html += (
-                f'<div class="list-row-v2">'
-                f'<div class="list-icon starred">{ICON_STAR}</div>'
-                f'<div>'
-                f'<div class="list-title">{r["titre"]}</div>'
-                f'<div class="list-category">{r["categorie"]}</div>'
-                f'</div>'
-                f'</div>'
-            )
-
-    st.markdown(
-        f"""
-        <div class="panel-v2">
+    with st.container(border=True, key="favoris_panel"):
+        st.markdown(
+            f"""
             <div class="panel-header">
                 <div class="panel-title font-serif">Vos favoris</div>
                 <div class="panel-link">Voir tout {ICON_CHEVRON_RIGHT}</div>
             </div>
             <div class="panel-divider"></div>
-            {rows_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if favorite_reports.empty:
+            st.markdown(
+                '<div style="padding:18px 4px; color:var(--ink-soft); font-size:13.5px;">'
+                'Aucun rapport favori pour le moment. Cliquez sur ☆ dans '
+                '<b>Liste des rapports</b> pour en ajouter.</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            for _, r in favorite_reports.iterrows():
+                icon_col, text_col, remove_col = st.columns([0.6, 5, 0.6])
+
+                with icon_col:
+                    st.markdown(
+                        f'<div class="list-icon starred">{ICON_STAR}</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                with text_col:
+                    st.markdown(
+                        f'<div class="list-title">{r["titre"]}</div>'
+                        f'<div class="list-category">{r["categorie"]}</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                with remove_col:
+                    st.button(
+                        "✖",
+                        key=f"remove_fav_{r['numero']}",
+                        on_click=_remove_favorite,
+                        args=(r["numero"],),
+                        help="Retirer des favoris",
+                    )
+
+                st.markdown('<div class="panel-divider"></div>', unsafe_allow_html=True)
