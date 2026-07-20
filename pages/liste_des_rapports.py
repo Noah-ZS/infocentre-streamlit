@@ -99,6 +99,27 @@ st.markdown(
 [class*="st-key-tab_"]:not([class*="_close_btn"]) button {
     padding: 4px 0 8px 0 !important;
 }
+
+/* Keep tab widgets from stretching */
+[class*="st-key-tab_"] {
+    width: fit-content !important;
+    flex: 0 0 auto !important;
+}
+
+/* Remove extra right padding on the label button */
+[class*="st-key-tab_"]:not([class*="_close_btn"]) button {
+    padding: 4px 0 8px 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+/* Make the close button hug the text */
+[class*="st-key-tab_"][class*="_close_btn"] button {
+    padding: 0 !important;
+    margin: 0 0 0 -4px !important;
+    min-width: 14px !important;
+    width: 14px !important;
+}
     </style>
     """,
     unsafe_allow_html=True,
@@ -164,10 +185,11 @@ def _toggle_favorite(numero):
 
 
 def _tab_col_width(label, closable):
-    width = 0.9 + len(label) * 0.085
+    # Make the tab only slightly wider than its text
+    width = 0.45 + len(label) * 0.032
     if closable:
-        width += 0.45  # room for the adjoining × button
-    return width
+        width += 0.08  # tiny space for the ×
+    return max(width, 0.95)
 
 
 open_tabs = st.session_state.lr_open_tabs
@@ -190,8 +212,8 @@ with tab_cols[0]:
 
 for i, key in enumerate(open_tabs):
     with tab_cols[i + 1]:
-        label_col, close_col = st.columns([1, 0.12], gap="small")
-        with label_col:
+         label_col, close_col = st.columns([1, 0.06], gap="medium") 
+         with label_col:
             st.button(
                 REPORT_TABS[key]["label"],
                 key=f"tab_{key}_btn",
@@ -199,7 +221,7 @@ for i, key in enumerate(open_tabs):
                 on_click=_activate_tab,
                 args=(key,),
             )
-        with close_col:
+         with close_col:
             st.button(
                 "✖",
                 key=f"tab_{key}_close_btn",
