@@ -96,29 +96,31 @@ st.markdown(
     font-size: 11px !important;
     line-height: 1 !important;
 }
+/* Keep each tab on ONE line */
 [class*="st-key-tab_"]:not([class*="_close_btn"]) button {
-    padding: 4px 0 8px 0 !important;
-}
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
 
-/* Keep tab widgets from stretching */
-[class*="st-key-tab_"] {
-    width: fit-content !important;
-    flex: 0 0 auto !important;
-}
-
-/* Remove extra right padding on the label button */
-[class*="st-key-tab_"]:not([class*="_close_btn"]) button {
-    padding: 4px 0 8px 0 !important;
     width: auto !important;
-    min-width: 0 !important;
+    min-width: max-content !important;   /* key fix */
+    padding: 4px 0 8px 0 !important;
 }
 
-/* Make the close button hug the text */
-[class*="st-key-tab_"][class*="_close_btn"] button {
-    padding: 0 !important;
-    margin: 0 0 0 -4px !important;
-    min-width: 14px !important;
-    width: 14px !important;
+/* Prevent the inner text element from wrapping */
+[class*="st-key-tab_"]:not([class*="_close_btn"]) button p,
+[class*="st-key-tab_"]:not([class*="_close_btn"]) button span {
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    margin: 0 !important;
+}
+
+/* Let the tab container grow to the text width */
+[class*="st-key-tab_"] {
+    width: auto !important;
+    min-width: max-content !important;
+    flex: 0 0 auto !important;
 }
     </style>
     """,
@@ -185,11 +187,10 @@ def _toggle_favorite(numero):
 
 
 def _tab_col_width(label, closable):
-    # Make the tab only slightly wider than its text
-    width = 0.45 + len(label) * 0.032
+    width = 0.55 + len(label) * 0.050
     if closable:
-        width += 0.08  # tiny space for the ×
-    return max(width, 0.95)
+        width += 0.12
+    return width
 
 
 open_tabs = st.session_state.lr_open_tabs
