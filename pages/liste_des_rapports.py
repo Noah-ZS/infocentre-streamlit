@@ -19,18 +19,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Reduce the top whitespace for this page only (shrinks the block container's
-# top padding so the left repertoire column sits closer to the page header).
-st.markdown(
-    """
-    <style>
-    section.main .block-container { padding-top: 0.4rem !important; }
-    .repertoire-title { margin-top: 0 !important; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
 # ============================================================
 # PAGE-LOCAL STYLE: TAB BAR
 # Scoped to this page only (doesn't touch common.py). Overrides
@@ -83,18 +71,69 @@ st.markdown(
         border: none !important;
         box-shadow: none !important;
         color: #B4AFA6 !important;
-        padding: 0 4px !important;
-        margin-top: 2px !important;
-        margin-left: -6px !important;
+        padding: 0 !important;
+        margin-top: 6px !important;
         height: auto !important;
         min-height: 0 !important;
         font-size: 12px !important;
         width: auto !important;
-        line-height: 1 !important;
     }
     [class*="st-key-tab_"][class*="_close_btn"] button:hover {
         color: #E0473B !important;
     }
+
+    /* ---------------- RÉPERTOIRES: INTERACTIVE FOLDER TREE ---------------- */
+    /* The whole left panel is now a real st.container(key="repertoire_panel")
+       (previously a hand-written <div> that never actually wrapped the
+       search input / tree buttons — an unclosed tag spanning separate
+       st.markdown()/st.button() calls doesn't nest them, it just renders
+       as an empty sibling box). Styled here to reproduce the original
+       card look for real. */
+    .st-key-repertoire_panel > div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: #FFFFFF;
+        border: 1px solid var(--line, #EAE5DC);
+    }
+
+    /* Each folder/file row is a real st.button (needed so it can be
+       clicked to expand/collapse), stripped down to look like the
+       original flat tree-item text row rather than a button. */
+    [class*="st-key-tree_node_"] button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        padding: 6px 4px !important;
+        margin: 0 !important;
+        font-size: 13.5px !important;
+        font-weight: 500 !important;
+        color: #4A4640 !important;
+        width: 100% !important;
+        border-radius: 6px !important;
+        white-space: pre !important; /* preserve the \u00A0-based indent */
+    }
+    [class*="st-key-tree_node_"] button:hover {
+        background: #F5F2EC !important;
+    }
+    /* Selected folder / ancestor-of-selected — reusing the same
+       type="primary" -> accent-color trick already used for tabs. */
+    [class*="st-key-tree_node_"] button[kind="primary"],
+    [class*="st-key-tree_node_"] [data-testid="stBaseButton-primary"],
+    [class*="st-key-tree_node_"] [data-testid="baseButton-primary"] {
+        background: var(--accent-bg, #FBEAE0) !important;
+        color: var(--accent, #D9642A) !important;
+        font-weight: 600 !important;
+    }
+
+    /* ---------------- CARD GRID: TIGHTER SPACING ---------------- */
+    /* Scoped to card_<numero> containers only, so nothing else on
+       the page (KPI cards, favorites panel, etc.) is affected. */
+    [class*="st-key-card_"] [data-testid="stVerticalBlock"] {
+        gap: 0.4rem !important;
+    }
+    .rc-card-title { margin-bottom: 4px !important; }
+    .rc-card-meta { margin-bottom: 2px !important; }
+    .rc-card-footer-divider { margin: 4px 0 6px 0 !important; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -149,61 +188,87 @@ def _toggle_favorite(numero):
         favorites.add(numero)
 
 
+# ============================================================
+# FOLDER TREE STATE
+# lr_expanded_folders: set of folder keys currently expanded.
+# lr_active_folder: the single folder key currently selected.
+# "Informatique" starts expanded / "Infocentre" starts selected,
+# matching the original static mockup's default look.
+# ============================================================
+
+if "lr_expanded_folders" not in st.session_state:
+    st.session_state.lr_expanded_folders = {"informatique"}
+if "lr_active_folder" not in st.session_state:
+    st.session_state.lr_active_folder = "infocentre"
+
+
+def _handle_folder_click(node_key, has_children):
+    if has_children:
+        expanded = st.session_state.lr_expanded_folders
+        if node_key in expanded:
+            expanded.discard(node_key)
+        else:
+            expanded.add(node_key)
+    st.session_state.lr_active_folder = node_key
+
+
+def _folder_contains_active(node):
+    if node["key"] == st.session_state.lr_active_folder:
+        return True
+    return any(_folder_contains_active(c) for c in node.get("children") or [])
+
+
 # ------------------------------------------------------------
 # TAB BAR
-# Column widths are estimated from each label's character count
-# (Streamlit columns can't auto-size to content), so short and
-# long tab labels sit close to their own text instead of being
-# stretched into equal-width boxes. A trailing spacer column
-# soaks up the remaining row width so tabs stay left-packed.
+# Streamlit columns can't natively size to their content — they
+# only take a relative ratio of the row's total width. Rather
+# than estimate pixel widths from character counts (fragile: it
+# depends on the actual rendered font/padding, which a Python
+# formula can't know), the tab row is wrapped in a keyed
+# container and every column inside it is forced via CSS to
+# hug its own content (flex: 0 0 auto) — letting the browser do
+# the actual text measurement — except the trailing spacer
+# column, which keeps growing to push all tabs to the left.
 # ------------------------------------------------------------
-
-
-def _tab_col_width(label, closable):
-    width = 0.9 + len(label) * 0.085
-    if closable:
-        width += 0.45  # room for the adjoining × button
-    return width
-
 
 open_tabs = st.session_state.lr_open_tabs
 
-tab_widths = [_tab_col_width("Liste des rapports", closable=False)]
-for key in open_tabs:
-    tab_widths.append(_tab_col_width(REPORT_TABS[key]["label"], closable=True))
-tab_widths.append(max(14.0 - sum(tab_widths), 0.5))  # trailing spacer
+with st.container(key="tab_bar_row"):
+    # Initial ratios barely matter — the CSS above overrides every
+    # column to auto-size to its content regardless of what's passed
+    # here, aside from the trailing spacer column.
+    tab_cols = st.columns([1] * (len(open_tabs) + 1) + [6])
 
-tab_cols = st.columns(tab_widths)
+    with tab_cols[0]:
+        st.button(
+            "Liste des rapports",
+            key="tab_liste_btn",
+            type="primary" if st.session_state.lr_active_tab == "liste" else "secondary",
+            on_click=_activate_tab,
+            args=("liste",),
+        )
 
-with tab_cols[0]:
-    st.button(
-        "Liste des rapports",
-        key="tab_liste_btn",
-        type="primary" if st.session_state.lr_active_tab == "liste" else "secondary",
-        on_click=_activate_tab,
-        args=("liste",),
-    )
-
-for i, key in enumerate(open_tabs):
-    with tab_cols[i + 1]:
-        label_col, close_col = st.columns([6, 0.7], gap="small")
-        with label_col:
-            st.button(
-                REPORT_TABS[key]["label"],
-                key=f"tab_{key}_btn",
-                type="primary" if st.session_state.lr_active_tab == key else "secondary",
-                on_click=_activate_tab,
-                args=(key,),
-            )
-        with close_col:
-            st.button(
-                "✖",
-                key=f"tab_{key}_close_btn",
-                on_click=_close_tab,
-                args=(key,),
-            )
+    for i, key in enumerate(open_tabs):
+        with tab_cols[i + 1]:
+            label_col, close_col = st.columns([5, 1])
+            with label_col:
+                st.button(
+                    REPORT_TABS[key]["label"],
+                    key=f"tab_{key}_btn",
+                    type="primary" if st.session_state.lr_active_tab == key else "secondary",
+                    on_click=_activate_tab,
+                    args=(key,),
+                )
+            with close_col:
+                st.button(
+                    "✖",
+                    key=f"tab_{key}_close_btn",
+                    on_click=_close_tab,
+                    args=(key,),
+                )
 
 st.divider()
+
 
 # ============================================================
 # TAB CONTENT (UNCHANGED dispatch logic)
@@ -243,6 +308,10 @@ else:
                 sorted(reports["categorie"].unique()),
                 key="category_filter"
             )
+
+    with sort_label_col:
+        st.markdown('<div style="padding-top:8px; font-size:13px; color:#6E6A63;">Trier par</div>', unsafe_allow_html=True)
+
     with sort_col:
         sort_option = st.selectbox(
             "Trier par",
@@ -282,22 +351,55 @@ else:
         ).sort_values("_is_fav", ascending=False)
 
     REPERTOIRE_TREE = [
-        {"label": "Tous les dossiers", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "Favoris", "level": 0, "chevron": False, "state": "normal", "star": True},
-        {"label": "Informatique", "level": 0, "chevron": "down", "state": "parent-active"},
-        {"label": "Production informatique", "level": 1, "chevron": True, "state": "normal"},
-        {"label": "Infocentre", "level": 1, "chevron": True, "state": "active"},
-        {"label": "Procédure tarifaire", "level": 1, "chevron": True, "state": "normal"},
-        {"label": "Nouvelles requêtes", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "Référentiel Article", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "LMH - Gestion Commerciale", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "LMH - Gestion Financière", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "LMH - Gestion Production", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "LMH - Contrôle de gestion", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "LMH - Logistique", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "Référentiel Mercure", "level": 0, "chevron": True, "state": "normal"},
-        {"label": "Divers", "level": 0, "chevron": True, "state": "normal"},
+        {"key": "tous", "label": "Tous les dossiers", "children": []},
+        {"key": "favoris", "label": "Favoris", "star": True, "children": []},
+        {"key": "informatique", "label": "Informatique", "children": [
+            {"key": "prod_informatique", "label": "Production informatique", "children": []},
+            {"key": "infocentre", "label": "Infocentre", "children": []},
+            {"key": "procedure_tarifaire", "label": "Procédure tarifaire", "children": []},
+        ]},
+        {"key": "nouvelles_requetes", "label": "Nouvelles requêtes", "children": []},
+        {"key": "referentiel_article", "label": "Référentiel Article", "children": []},
+        {"key": "lmh_commerciale", "label": "LMH - Gestion Commerciale", "children": []},
+        {"key": "lmh_financiere", "label": "LMH - Gestion Financière", "children": []},
+        {"key": "lmh_production", "label": "LMH - Gestion Production", "children": []},
+        {"key": "lmh_controle", "label": "LMH - Contrôle de gestion", "children": []},
+        {"key": "lmh_logistique", "label": "LMH - Logistique", "children": []},
+        {"key": "referentiel_mercure", "label": "Référentiel Mercure", "children": []},
+        {"key": "divers", "label": "Divers", "children": []},
     ]
+
+    def _render_folder_tree(nodes, depth=0):
+        for node in nodes:
+            node_key = node["key"]
+            children = node.get("children") or []
+            has_children = len(children) > 0
+            is_star = node.get("star", False)
+            is_expanded = node_key in st.session_state.lr_expanded_folders
+            is_active = node_key == st.session_state.lr_active_folder
+            is_parent_active = has_children and not is_active and _folder_contains_active(node)
+
+            indent = "\u00A0" * (depth * 4)
+            if is_star:
+                prefix = "\u00A0\u00A0"
+                glyph = "⭐" if is_active else "☆"
+            elif has_children:
+                prefix = "▾ " if is_expanded else "▸ "
+                glyph = "📂" if is_expanded else "📁"
+            else:
+                prefix = "\u00A0\u00A0"
+                glyph = "📁"
+
+            st.button(
+                f"{indent}{prefix}{glyph} {node['label']}",
+                key=f"tree_node_{node_key}",
+                type="primary" if (is_active or is_parent_active) else "secondary",
+                on_click=_handle_folder_click,
+                args=(node_key, has_children),
+            )
+
+            if has_children and is_expanded:
+                _render_folder_tree(children, depth=depth + 1)
 
     # ---------------- LAYOUT: REPERTOIRES + CARD GRID ----------------
 
@@ -305,60 +407,39 @@ else:
 
     with left_col:
 
-        st.markdown('<div class="repertoire-title font-serif">Répertoires</div>', unsafe_allow_html=True)
+        with st.container(border=True, key="repertoire_panel"):
+            st.markdown('<div class="repertoire-title font-serif">Répertoires</div>', unsafe_allow_html=True)
 
-        st.text_input(
-            "Rechercher un dossier",
-            placeholder="Rechercher un dossier...",
-            label_visibility="collapsed",
-            key="folder_search"
-        )
-
-        st.markdown('<div style="height:6px;"></div>', unsafe_allow_html=True)
-
-        tree_html = ""
-        for item in REPERTOIRE_TREE:
-            indent_class = "tree-indent-1" if item["level"] == 1 else ""
-            state_class = {
-                "active": "tree-active",
-                "parent-active": "tree-parent-active",
-                "normal": "",
-            }[item["state"]]
-
-            if item.get("star"):
-                chevron_html = f'<span class="tree-chevron">{ICON_STAR}</span>'
-            elif item["chevron"] == "down":
-                chevron_html = f'<span class="tree-chevron">{ICON_CHEVRON_DOWN}</span>'
-            elif item["chevron"]:
-                chevron_html = f'<span class="tree-chevron">{ICON_CHEVRON_RIGHT}</span>'
-            else:
-                chevron_html = '<span class="tree-chevron" style="width:15px;"></span>'
-
-            icon_html = "" if item.get("star") else f'<span class="tree-icon">{ICON_FOLDER}</span>'
-
-            tree_html += (
-                f'<div class="tree-item {state_class} {indent_class}">'
-                f'{chevron_html}{icon_html}<span>{item["label"]}</span></div>'
+            st.text_input(
+                "Rechercher un dossier",
+                placeholder="Rechercher un dossier...",
+                label_visibility="collapsed",
+                key="folder_search"
             )
 
-        st.markdown(tree_html, unsafe_allow_html=True)
+            st.markdown('<div style="height:2px;"></div>', unsafe_allow_html=True)
 
-        st.markdown(
-            f'<div class="tree-footer">{ICON_SETTINGS}<span>Gérer les dossiers</span></div>',
-            unsafe_allow_html=True
-        )
+            _render_folder_tree(REPERTOIRE_TREE)
+
+            st.markdown(
+                f'<div class="tree-footer">{ICON_SETTINGS}<span>Gérer les dossiers</span></div>',
+                unsafe_allow_html=True
+            )
 
     with right_col:
 
-        # ---------------- CARD GRID (2 columns) ----------------
+        # ---------------- CARD GRID (3 columns) ----------------
         # Rows with a real report key (mesures/article/commandes)
         # still open their in-app tab exactly as before — the
         # title is a genuine st.button. Each card uses a REAL
-        # st.container(border=True) rather than a raw HTML <div>
-        # spanning two separate st.markdown() calls — Streamlit
-        # widgets can't nest inside a hand-written div that way
-        # (they render as siblings, not children), which is what
-        # caused the broken/empty card boxes before.
+        # st.container(border=True, key=f"card_{numero}") rather
+        # than a raw HTML <div> spanning two separate st.markdown()
+        # calls — Streamlit widgets can't nest inside a hand-written
+        # div that way (they render as siblings, not children),
+        # which is what caused the broken/empty card boxes before.
+        # The per-card key also lets the CSS above target each
+        # card's internal spacing without touching bordered
+        # containers elsewhere on the page.
 
         if filtered_reports.empty:
 
@@ -367,14 +448,15 @@ else:
         else:
 
             reports_list = filtered_reports.to_dict("records")
+            CARDS_PER_ROW = 3
 
-            for row_start in range(0, len(reports_list), 2):
-                pair = reports_list[row_start:row_start + 2]
-                card_cols = st.columns(2, gap="medium")
+            for row_start in range(0, len(reports_list), CARDS_PER_ROW):
+                pair = reports_list[row_start:row_start + CARDS_PER_ROW]
+                card_cols = st.columns(CARDS_PER_ROW, gap="medium")
 
                 for card_col, r in zip(card_cols, pair):
                     with card_col:
-                        with st.container(border=True):
+                        with st.container(border=True, key=f"card_{r['numero']}"):
 
                             is_favori = r["numero"] in favorites
                             star_icon = "⭐" if is_favori else "☆"
@@ -425,7 +507,7 @@ else:
                                     unsafe_allow_html=True,
                                 )
 
-                st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
+                st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
 
         # ---------------- FOOTER: PAGE SIZE + PAGINATION ----------------
 
